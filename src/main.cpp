@@ -7,6 +7,7 @@
 #include "Mqtt.h"
 #include "settings.h"
 #include "Logger.h"
+#include "DS18B20.h"
 
 // #define ENABLE_OTA    // If defined, enable Arduino OTA code.
 
@@ -15,8 +16,36 @@
 #include <ArduinoOTA.h>
 #endif
 
-Ticker blinker;
-bool mqttConnected = false;
+static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
+static bool mqttConnected = false;
+static uint32_t flow1IntCnt, flow2IntCnt, flow1, flow2;
+static DS18B20 temp1(TEMP_1_PIN), temp2(TEMP_2_PIN);
+
+/*****************/
+/*** INTERRUPT ***/
+/*****************/
+
+// Compute flow 1
+IRAM_ATTR void onFlow1Interrupt()
+{
+  flow1IntCnt++;
+}
+
+// Compute flow 2
+IRAM_ATTR void onFlow2Interrupt()
+{
+  flow2IntCnt++;
+}
+
+/**************/
+/*** TICKER ***/
+/**************/
+
+// LED blink
+void blinkLED()
+{
+  digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+}
 
 void updateNTP()
 {
@@ -30,33 +59,43 @@ void updateNTP()
   Log.println("Update NTP");
 }
 
-void blink()
+void computeFlowMetter()
 {
-  digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+  // Compute flow metter 1
+  flow1 = flow1IntCnt * 6;
+  flow1IntCnt = 0;
+  // Compute flow metter 2
+  flow2 = flow2IntCnt * 6;
+  flow2IntCnt = 0;
 }
 
-/*************/
-/*** SETUP ***/
-/*************/
-void setup()
+void sendData()
 {
-  /* Initialize Logger */
-  Log.setup();
-  Log.println(String(F("ESP_Pool - Build: ")) + F(__DATE__) + " " + F(__TIME__));
+  Log.println("Send data to MQTT");
+  // Monitoring.handle();
+  MqttClient.publishMonitoringData();
 
-  // Setup PIN
-  pinMode(RELAY_1_PIN, OUTPUT);
-  pinMode(RELAY_2_PIN, OUTPUT);
-  pinMode(RELAY_3_PIN, OUTPUT);
-  pinMode(RELAY_4_PIN, OUTPUT);
-  pinMode(LED_PIN, OUTPUT);
+  // Check state of MQTT
+  bool currentMqttState = MqttClient.isConnected();
+  if (currentMqttState != mqttConnected)
+  {
+    if (currentMqttState)
+    {
+      tick_blinker.attach(LED_TIME_WORK, blinkLED);
+    }
+    else
+    {
+      tick_blinker.attach(LED_TIME_NOMQTT, blinkLED);
+    }
+    mqttConnected = currentMqttState;
+  }
+}
 
-  blinker.attach(LED_TIME_NOMQTT, blink);
-
-  /* Read configuration from SPIFFS */
-  Configuration.setup();
-  // Configuration.restoreDefault();
-
+/************/
+/*** WIFI ***/
+/************/
+void wifiSetup()
+{
   WiFiManager wifiManager;
   // wifiManager.setDebugOutput(false);
   // wifiManager.resetSettings();
@@ -94,6 +133,40 @@ void setup()
   Configuration._mqttPortServer = atoi(custom_mqtt_port.getValue());
   Configuration._timeSendData = atoi(custom_time_update.getValue());
   Configuration.saveConfig();
+}
+
+/*************/
+/*** SETUP ***/
+/*************/
+void setup()
+{
+  /* Initialize Logger */
+  Log.setup();
+  Log.println(String(F("ESP_Pool - Build: ")) + F(__DATE__) + " " + F(__TIME__));
+
+  // Setup PIN
+  pinMode(RELAY_1_PIN, OUTPUT);
+  pinMode(RELAY_2_PIN, OUTPUT);
+  pinMode(RELAY_3_PIN, OUTPUT);
+  pinMode(RELAY_4_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(FLOW_1_PIN, INPUT_PULLUP);
+  pinMode(FLOW_2_PIN, INPUT_PULLUP);
+
+  // Create ticker for blink LED
+  tick_blinker.attach(LED_TIME_NOMQTT, blinkLED);
+
+  // Attach interrupt for compute frequency
+  attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
+  attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
+  flow1IntCnt = flow2IntCnt = 0;
+
+  /* Read configuration from SPIFFS */
+  Configuration.setup();
+  // Configuration.restoreDefault();
+
+  // Configure and run WifiManager
+  wifiSetup();
 
   /* Initialize HTTP Server */
   HTTPServer.setup();
@@ -140,7 +213,15 @@ void setup()
   Log.println("");
 #endif
 
+  // Create ticker for update NTP time
   updateNTP();
+  tick_ntp.attach(Configuration._timeUpdateNtp, updateNTP);
+
+  // Create ticker for send data to MQTT
+  tick_sendDataMqtt.attach(Configuration._timeSendData, sendData);
+
+  // Create ticker for compute Flow Metter
+  tick_flowMetter.attach(1, computeFlowMetter);
 }
 
 /************/
@@ -148,9 +229,6 @@ void setup()
 /************/
 void loop()
 {
-  static unsigned long tickNTPUpdate, tickSendData;
-  unsigned long currentMillis = millis();
-
   MqttClient.handle();
   Log.handle();
   HTTPServer.handle();
@@ -158,35 +236,6 @@ void loop()
 #ifdef ENABLE_OTA
   ArduinoOTA.handle();
 #endif
-
-  if ((currentMillis - tickNTPUpdate) >= (unsigned long)(Configuration._timeUpdateNtp * 1000))
-  {
-    updateNTP();
-    tickNTPUpdate = currentMillis;
-  }
-
-  if ((currentMillis - tickSendData) >= (unsigned long)(Configuration._timeSendData * 1000))
-  {
-    Log.println("Send data to MQTT");
-    // Monitoring.handle();
-    MqttClient.publishMonitoringData();
-    tickSendData = currentMillis;
-    
-    // Check state of MQTT
-    bool currentMqttState = MqttClient.isConnected();
-    if (currentMqttState != mqttConnected)
-    {
-      if (currentMqttState)
-      {
-        blinker.attach(LED_TIME_WORK, blink);
-      }
-      else
-      {
-        blinker.attach(LED_TIME_NOMQTT, blink);
-      }
-      mqttConnected = currentMqttState;
-    }
-  }
 
   delay(50);
 }

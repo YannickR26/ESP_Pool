@@ -88,14 +88,14 @@ void Mqtt::reconnect()
   {
     if ((millis() - tick) >= 5000)
     {
-      Log.print("Attempting MQTT connection...");
+      Log.print("Attempting MQTT connection... ");
       // Create a random clientMqtt ID
       String clientId = "ESP8266Client-";
       clientId += String(random(0xffff), HEX);
       // Attempt to connect
       if (clientMqtt.connect(clientId.c_str()))
       {
-        Log.println("connected");
+        Log.println("connected !");
         // Once connected, publish an announcement...
         clientMqtt.publish(String(Configuration._hostname + "/relay_1").c_str(), String(digitalRead(RELAY_1_PIN)).c_str());
         clientMqtt.publish(String(Configuration._hostname + "/relay_2").c_str(), String(digitalRead(RELAY_2_PIN)).c_str());

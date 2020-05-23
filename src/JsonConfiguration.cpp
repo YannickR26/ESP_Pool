@@ -20,7 +20,7 @@ JsonConfiguration::~JsonConfiguration()
 void JsonConfiguration::setup(void)
 {
   /* Initialize SPIFFS */
-  if (!SPIFFS.begin())
+  if (!SPIFFS.begin(true))
   {
     Log.println("failed to initialize SPIFFS");
   }
@@ -59,6 +59,7 @@ bool JsonConfiguration::readConfig()
   if (error)
   {
     Log.println(F("Failed to read file, using default configuration"));
+    return false;
   }
 
   _hostname = doc["hostname"] | DEFAULT_HOSTNAME;
