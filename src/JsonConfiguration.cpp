@@ -101,11 +101,6 @@ bool JsonConfiguration::saveConfig()
   configFile.close();
 
   Log.println("Save config successfully");
-  Log.println(String("    hostname: ") + _hostname);
-  Log.println(String("    mqttIpServer: ") + _mqttIpServer);
-  Log.println(String("    mqttPortServer: ") + String(_mqttPortServer));
-  Log.println(String("    timeUpdateNTP: ") + String(_timeUpdateNtp));
-  Log.println(String("    timeSendData: ") + String(_timeSendData));
 
   return true;
 }

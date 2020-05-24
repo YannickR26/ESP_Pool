@@ -12,7 +12,7 @@ public:
 
 	void setup();
 	void handle();
-	void publishMonitoringData();
+	void publishData(String topic, String payload);
 	bool isConnected() { return clientMqtt.connected(); }
 
 private:

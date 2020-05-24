@@ -17,7 +17,6 @@
 #endif
 
 static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
-static bool mqttConnected = false;
 static uint32_t flow1IntCnt, flow2IntCnt, flow1, flow2;
 static DS18B20 temp1(TEMP_1_PIN), temp2(TEMP_2_PIN);
 
@@ -45,6 +44,16 @@ IRAM_ATTR void onFlow2Interrupt()
 void blinkLED()
 {
   digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+
+  // Check state of MQTT
+  if (MqttClient.isConnected())
+  {
+    tick_blinker.once(LED_TIME_WORK, blinkLED);
+  }
+  else
+  {
+    tick_blinker.once(LED_TIME_NOMQTT, blinkLED);
+  }
 }
 
 void updateNTP()
@@ -57,8 +66,12 @@ void updateNTP()
     delay(1000);
   }
   Log.println("Update NTP");
+
+  // Restart ticker
+  tick_ntp.once(Configuration._timeUpdateNtp, updateNTP);
 }
 
+// Call every 1 second, so the counter is equal to frequency
 void computeFlowMetter()
 {
   // Compute flow metter 1
@@ -71,24 +84,18 @@ void computeFlowMetter()
 
 void sendData()
 {
-  Log.println("Send data to MQTT");
-  // Monitoring.handle();
-  MqttClient.publishMonitoringData();
+  float tmp1 = temp1.readTemp();
+  float tmp2 = temp2.readTemp();
 
-  // Check state of MQTT
-  bool currentMqttState = MqttClient.isConnected();
-  if (currentMqttState != mqttConnected)
-  {
-    if (currentMqttState)
-    {
-      tick_blinker.attach(LED_TIME_WORK, blinkLED);
-    }
-    else
-    {
-      tick_blinker.attach(LED_TIME_NOMQTT, blinkLED);
-    }
-    mqttConnected = currentMqttState;
-  }
+  Log.println("Send data to MQTT");
+
+  MqttClient.publishData("temp1", String(tmp1));
+  MqttClient.publishData("temp2", String(tmp2));
+  MqttClient.publishData("flow1", String(flow1));
+  MqttClient.publishData("flow2", String(flow2));
+
+  // Restart ticker
+  tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 }
 
 /************/
@@ -97,7 +104,7 @@ void sendData()
 void wifiSetup()
 {
   WiFiManager wifiManager;
-  // wifiManager.setDebugOutput(false);
+  wifiManager.setDebugOutput(false);
   // wifiManager.resetSettings();
 
   // WiFiManagerParameter
@@ -154,7 +161,7 @@ void setup()
   pinMode(FLOW_2_PIN, INPUT_PULLUP);
 
   // Create ticker for blink LED
-  tick_blinker.attach(LED_TIME_NOMQTT, blinkLED);
+  tick_blinker.once(LED_TIME_NOMQTT, blinkLED);
 
   // Attach interrupt for compute frequency
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
@@ -215,10 +222,10 @@ void setup()
 
   // Create ticker for update NTP time
   updateNTP();
-  tick_ntp.attach(Configuration._timeUpdateNtp, updateNTP);
+  tick_ntp.once(Configuration._timeUpdateNtp, updateNTP);
 
   // Create ticker for send data to MQTT
-  tick_sendDataMqtt.attach(Configuration._timeSendData, sendData);
+  tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 
   // Create ticker for compute Flow Metter
   tick_flowMetter.attach(1, computeFlowMetter);

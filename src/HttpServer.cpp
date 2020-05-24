@@ -1,11 +1,10 @@
 #include <FS.h>
 #include <SPIFFS.h>
 #include <ESPmDNS.h>
-#include "ESP32HTTPUpdateServer.h"
 
 // You can update by 'curl -F "image=@firmware.bin" ESP_Monitoring.local/'
 
-#include "WiFiManager.h"
+#include "ESP32HTTPUpdateServer.h"
 #include "HttpServer.h"
 #include "Logger.h"
 
@@ -27,17 +26,8 @@ void HttpServer::setup(void)
   MDNS.begin(Configuration._hostname.c_str()); 
   MDNS.addService("http", "tcp", 80);
 
-  _webServer.on("/reboot", [&]() {
+  _webServer.on("/restart", [&]() {
     _webServer.send(200, "text/plain", "ESP reboot now !");
-    delay(200);
-    ESP.restart();
-  });
-  
-  _webServer.on("/wifimanager", [&]() {
-    _webServer.send(200, "text/plain", "Reset settings of WifiManager, the card reboot now in AP mode");
-    delay(200);
-    WiFiManager wifiManager;
-    wifiManager.resetSettings();
     delay(200);
     ESP.restart();
   });
