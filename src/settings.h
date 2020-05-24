@@ -11,8 +11,9 @@
 #define DEFAULT_SEND_DATA_INTERVAL_SEC      5               // Log data every 5 secondes
 
 // Flow Meter (YF-B10)
-#define FLOW_1_PIN      22
-#define FLOW_2_PIN      21
+#define FLOW_1_PIN          22
+#define FLOW_2_PIN          21
+#define FLOW_CALIB_VALUE    6
 
 // Temperature (DS18B20)
 #define TEMP_1_PIN      23

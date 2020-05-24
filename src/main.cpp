@@ -17,7 +17,8 @@
 #endif
 
 static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
-static uint32_t flow1IntCnt, flow2IntCnt, flow1, flow2;
+static uint32_t flow1IntCnt, flow2IntCnt;
+static float flow1, flow2;
 static DS18B20 temp1(TEMP_1_PIN), temp2(TEMP_2_PIN);
 
 /*****************/
@@ -74,25 +75,49 @@ void updateNTP()
 // Call every 1 second, so the counter is equal to frequency
 void computeFlowMetter()
 {
+  static uint32_t oldTime = 0;
+  uint32_t currentTime = millis();
+
+  // Detach the interrupt while calculating flow rate
+  detachInterrupt(digitalPinToInterrupt(FLOW_1_PIN));
+  detachInterrupt(digitalPinToInterrupt(FLOW_2_PIN));
+
   // Compute flow metter 1
-  flow1 = flow1IntCnt * 6;
+  flow1 += ((1000.0 / (currentTime - oldTime)) * flow1IntCnt) / FLOW_CALIB_VALUE;
   flow1IntCnt = 0;
   // Compute flow metter 2
-  flow2 = flow2IntCnt * 6;
+  flow2 += ((1000.0 / (currentTime - oldTime)) * flow2IntCnt) / FLOW_CALIB_VALUE;
   flow2IntCnt = 0;
+
+  // Save current timestamp
+  oldTime = currentTime;
+
+  // Enable the interrupt
+  attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
+  attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
 }
 
 void sendData()
 {
-  float tmp1 = temp1.readTemp();
-  float tmp2 = temp2.readTemp();
-
   Log.println("Send data to MQTT");
 
+  // Read Temp 1
+  float tmp1 = temp1.readTemp();
   MqttClient.publishData("temp1", String(tmp1));
+  
+  // Read Temp 2
+  float tmp2 = temp2.readTemp();
   MqttClient.publishData("temp2", String(tmp2));
+  
+  // Compute flow metter 1
+  flow1 /= Configuration._timeSendData;
   MqttClient.publishData("flow1", String(flow1));
+  flow1 = 0;
+
+  // Compute flow metter 2
+  flow2 /= Configuration._timeSendData;
   MqttClient.publishData("flow2", String(flow2));
+  flow2 = 0;
 
   // Restart ticker
   tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
@@ -167,6 +192,7 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
   attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
   flow1IntCnt = flow2IntCnt = 0;
+  flow1 = flow2 = 0;
 
   /* Read configuration from SPIFFS */
   Configuration.setup();
