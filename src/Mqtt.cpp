@@ -36,9 +36,14 @@ void Mqtt::handle()
   clientMqtt.loop();
 }
 
-void Mqtt::publishData(String topic, String payload)
+void Mqtt::publish(String topic, String body)
 {
-  clientMqtt.publish(String(Configuration._hostname + '/' + topic).c_str(), String(payload).c_str());
+  clientMqtt.publish(String(Configuration._hostname + '/' + topic).c_str(), String(body).c_str());
+}
+
+void Mqtt::log(String level, String str)
+{
+  publish("log/" + level, str);
 }
 
 /********************************************************/
@@ -62,14 +67,18 @@ void Mqtt::reconnect()
       {
         Log.println("connected !");
         // Once connected, publish an announcement...
-        clientMqtt.publish(String(Configuration._hostname + "/relay_1").c_str(), String(digitalRead(RELAY_1_PIN)).c_str());
-        clientMqtt.publish(String(Configuration._hostname + "/relay_2").c_str(), String(digitalRead(RELAY_2_PIN)).c_str());
-        clientMqtt.publish(String(Configuration._hostname + "/relay_3").c_str(), String(digitalRead(RELAY_3_PIN)).c_str());
-        clientMqtt.publish(String(Configuration._hostname + "/relay_4").c_str(), String(digitalRead(RELAY_4_PIN)).c_str());
-        clientMqtt.publish(String(Configuration._hostname + "/timeIntervalUpdate").c_str(), String(Configuration._timeSendData).c_str());
-        clientMqtt.publish(String(Configuration._hostname + "/version").c_str(), String(VERSION).c_str());
-        clientMqtt.publish(String(Configuration._hostname + "/build").c_str(), String(String(__DATE__) + " " + String(__TIME__)).c_str());
-        clientMqtt.publish(String(Configuration._hostname + "/ip").c_str(), WiFi.localIP().toString().c_str());
+
+        publish(String("version"), String(VERSION));
+        publish(String("build"), String(String(__DATE__) + " " + String(__TIME__)));
+        publish(String("ip"), WiFi.localIP().toString());
+        publish(String("timeIntervalUpdate"), String(Configuration._timeSendData));
+        publish(String("timeIntervalSaveData"), String(Configuration._timeSaveData));
+        publish(String("relay1"), String(digitalRead(RELAY_1_PIN)));
+        publish(String("relay2"), String(digitalRead(RELAY_2_PIN)));
+        publish(String("relay3"), String(digitalRead(RELAY_3_PIN)));
+        publish(String("relay4"), String(digitalRead(RELAY_4_PIN)));
+        publish(String("waterQty1"), String(Configuration._waterQtyA));
+        publish(String("waterQty2"), String(Configuration._waterQtyB));
         // ... and resubscribe
         clientMqtt.subscribe(String(Configuration._hostname + "/set/#").c_str());
       }
@@ -101,33 +110,33 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
   String topicStr(topic);
   topicStr.remove(0, topicStr.lastIndexOf('/') + 1);
 
-  if (topicStr == String("relay_1"))
+  if (topicStr == String("relay1"))
   {
     int status = data.toInt();
     digitalWrite(RELAY_1_PIN, status);
     Log.println(String("set relay 1 to ") + String(status));
-    clientMqtt.publish(String(Configuration._hostname + "/relay_1").c_str(), String(status).c_str());
+    publish("relay1", String(status));
   }
-  else if (topicStr == String("relay_2"))
+  else if (topicStr == String("relay2"))
   {
     int status = data.toInt();
     digitalWrite(RELAY_2_PIN, status);
     Log.println(String("set relay 2 to ") + String(status));
-    clientMqtt.publish(String(Configuration._hostname + "/relay_2").c_str(), String(status).c_str());
+    publish("relay2", String(status));
   }
   else if (topicStr == String("relay_3"))
   {
     int status = data.toInt();
     digitalWrite(RELAY_3_PIN, status);
     Log.println(String("set relay 3 to ") + String(status));
-    clientMqtt.publish(String(Configuration._hostname + "/relay_3").c_str(), String(status).c_str());
+    publish("relay3", String(status));
   }
   else if (topicStr == String("relay_4"))
   {
     int status = data.toInt();
     digitalWrite(RELAY_4_PIN, status);
     Log.println(String("set relay 4 to ") + String(status));
-    clientMqtt.publish(String(Configuration._hostname + "/relay_4").c_str(), String(status).c_str());
+    publish("relay4", String(status));
   }
   else if (topicStr == String("timeIntervalUpdate"))
   {
@@ -135,7 +144,7 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Log.println(String("set timeSendData to ") + String(time));
     Configuration._timeSendData = time;
     Configuration.saveConfig();
-    clientMqtt.publish(String(Configuration._hostname + "/timeIntervalUpdate").c_str(), String(Configuration._timeSendData).c_str());
+    publish(String("timeIntervalUpdate"), String(Configuration._timeSendData));
   }
   else if (topicStr == String("hostname"))
   {
@@ -154,6 +163,22 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     WiFiManager wifiManager;
     wifiManager.resetSettings();
     ESP.restart();
+  }
+  else if (topicStr == String("waterQty1"))
+  {
+    int qty = data.toInt();
+    Log.println("Set waterQty1 to: " + String(qty) + " L");
+    Configuration._waterQtyA = qty;
+    Configuration.saveConfig();
+    publish(String("waterQty1"), String(Configuration._waterQtyA));
+  }
+  else if (topicStr == String("waterQty2"))
+  {
+    int qty = data.toInt();
+    Log.println("Set waterQty2 to: " + String(qty) + " L");
+    Configuration._waterQtyB = qty;
+    Configuration.saveConfig();
+    publish(String("waterQty2"), String(Configuration._waterQtyB));
   }
   else
   {

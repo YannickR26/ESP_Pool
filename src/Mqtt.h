@@ -12,7 +12,8 @@ public:
 
 	void setup();
 	void handle();
-	void publishData(String topic, String payload);
+	void publish(String topic, String body);
+	void log(String level, String str);
 	bool isConnected() { return clientMqtt.connected(); }
 
 private:
