@@ -16,10 +16,18 @@
 #include <ArduinoOTA.h>
 #endif
 
+static DS18B20 ds18b20_1(TEMP_1_PIN), ds18b20_2(TEMP_2_PIN);
+
 static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
 static uint32_t flow1IntCnt, flow2IntCnt;
-static float flow1, flow2;
-static DS18B20 temp1(TEMP_1_PIN), temp2(TEMP_2_PIN);
+
+// Value of flow
+static float flow1, flow2;         // in l/min
+static float waterQty1, waterQty2; // in l
+// Value of water level
+static float waterLevel; // in cm
+// Temperature value
+static float tempFiltering1, tempFiltering2; // in °C
 
 /*****************/
 /*** INTERRUPT ***/
@@ -57,8 +65,10 @@ void blinkLED()
   }
 }
 
-void updateNTP()
+void updateTimeAndSaveData()
 {
+  Log.println("Update NTP");
+
   configTime(UTC_OFFSET * 3600, 0, NTP_SERVERS);
   delay(500);
   while (!time(nullptr))
@@ -66,10 +76,14 @@ void updateNTP()
     Log.print("#");
     delay(1000);
   }
-  Log.println("Update NTP");
+
+  Log.println("Save data");
+  Configuration._waterQtyA = waterQty1;
+  Configuration._waterQtyB = waterQty2;
+  Configuration.saveConfig();
 
   // Restart ticker
-  tick_ntp.once(Configuration._timeUpdateNtp, updateNTP);
+  tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
 }
 
 // Call every 1 second, so the counter is equal to frequency
@@ -77,20 +91,33 @@ void computeFlowMetter()
 {
   static uint32_t oldTime = 0;
   uint32_t currentTime = millis();
+  float ratio = 1000.0 / (currentTime - oldTime);
 
   // Detach the interrupt while calculating flow rate
   detachInterrupt(digitalPinToInterrupt(FLOW_1_PIN));
   detachInterrupt(digitalPinToInterrupt(FLOW_2_PIN));
 
+  // Log.println();
+  // Log.println("ratio : " + String(ratio));
+  // Log.println("flow cnt 1: " + String(flow1IntCnt));
+  // Log.println("flow cnt 2: " + String(flow2IntCnt));
+
   // Compute flow metter 1
-  flow1 += ((1000.0 / (currentTime - oldTime)) * flow1IntCnt) / FLOW_CALIB_VALUE;
+  flow1 = (ratio * flow1IntCnt) / FLOW_CALIB_VALUE;
+  waterQty1 += flow1 / (60.0 * ratio);
   flow1IntCnt = 0;
   // Compute flow metter 2
-  flow2 += ((1000.0 / (currentTime - oldTime)) * flow2IntCnt) / FLOW_CALIB_VALUE;
+  flow2 = (ratio * flow2IntCnt) / FLOW_CALIB_VALUE;
+  waterQty2 += flow2 / (60.0 * ratio);
   flow2IntCnt = 0;
 
   // Save current timestamp
   oldTime = currentTime;
+
+  // Log.println("flow 1 : " + String(flow1) + " L/min");
+  // Log.println("flow 2 : " + String(flow2) + " L/min");
+  // Log.println("WaterVolume1 : " + String(waterVolume1) + " L");
+  // Log.println("WaterVolume2 : " + String(waterVolume2) + " L");
 
   // Enable the interrupt
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
@@ -99,25 +126,45 @@ void computeFlowMetter()
 
 void sendData()
 {
-  Log.println("Send data to MQTT");
+  Log.println();
+  Log.println("Send data to MQTT :");
 
-  // Read Temp 1
-  float tmp1 = temp1.readTemp();
-  MqttClient.publishData("temp1", String(tmp1));
-  
-  // Read Temp 2
-  float tmp2 = temp2.readTemp();
-  MqttClient.publishData("temp2", String(tmp2));
-  
-  // Compute flow metter 1
-  flow1 /= Configuration._timeSendData;
-  MqttClient.publishData("flow1", String(flow1));
-  flow1 = 0;
+  // Read Temp 1, in °C
+  float tmp1 = ds18b20_1.readTemp();
+  tempFiltering1 = tmp1;
+  Log.println("\t temp1: \t" + String(tempFiltering1) + " °C");
+  MqttClient.publish("temp1", String(tempFiltering1));
 
-  // Compute flow metter 2
-  flow2 /= Configuration._timeSendData;
-  MqttClient.publishData("flow2", String(flow2));
-  flow2 = 0;
+  // Read Temp 2, in °C
+  float tmp2 = ds18b20_2.readTemp();
+  tempFiltering2 = tmp2;
+  Log.println("\t temp2: \t" + String(tempFiltering2) + " °C");
+  MqttClient.publish("temp2", String(tempFiltering2));
+
+  // flow metter 1, in L/min
+  Log.println("\t flow1: \t" + String(flow1) + " L/Min");
+  MqttClient.publish("flow1", String(flow1));
+
+  // Water quantity 1, in L
+  Log.println("\t waterQty1: \t" + String(waterQty1) + " L");
+  MqttClient.publish("waterQty1", String(waterQty1));
+
+  // flow metter 2, in L/min
+  Log.println("\t flow2: \t" + String(flow2) + " L/Min");
+  MqttClient.publish("flow2", String(flow2));
+
+  // Water quantity 2, in L
+  Log.println("\t waterQty2: \t" + String(waterQty2) + " L");
+  MqttClient.publish("waterQty2", String(waterQty2));
+
+  // Water level, in cm
+  uint16_t adc = analogRead(WATER_LEVEL_PIN);
+  float valueInCm = WATER_LEVEL_COEF_A * adc + WATER_LEVEL_COEF_B;
+  if (valueInCm < 0)
+    valueInCm = 0;
+  waterLevel = (waterLevel + valueInCm) / 2;
+  Log.println("\t waterLevel: \t" + String((int)waterLevel) + " cm");
+  MqttClient.publish("waterLevel", String((int)waterLevel));
 
   // Restart ticker
   tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
@@ -128,9 +175,9 @@ void sendData()
 /************/
 void wifiSetup()
 {
-  WiFiManager wifiManager;
-  wifiManager.setDebugOutput(false);
-  // wifiManager.resetSettings();
+  WiFiManager wm;
+  wm.setDebugOutput(false);
+  // wm.resetSettings();
 
   // WiFiManagerParameter
   WiFiManagerParameter custom_mqtt_hostname("hostname", "hostname", Configuration._hostname.c_str(), 60);
@@ -139,15 +186,15 @@ void wifiSetup()
   WiFiManagerParameter custom_time_update("timeUpdate", "time update data (s)", String(Configuration._timeSendData).c_str(), 6);
 
   // add all your parameters here
-  wifiManager.addParameter(&custom_mqtt_hostname);
-  wifiManager.addParameter(&custom_mqtt_server);
-  wifiManager.addParameter(&custom_mqtt_port);
-  wifiManager.addParameter(&custom_time_update);
+  wm.addParameter(&custom_mqtt_hostname);
+  wm.addParameter(&custom_mqtt_server);
+  wm.addParameter(&custom_mqtt_port);
+  wm.addParameter(&custom_time_update);
 
   Log.println("Try to connect to WiFi...");
-  // wifiManager.setWiFiChannel(6);
-  wifiManager.setConfigPortalTimeout(300); // Set Timeout for portal configuration to 300 seconds
-  if (!wifiManager.autoConnect(Configuration._hostname.c_str()))
+  // wm.setWiFiChannel(6);
+  wm.setConfigPortalTimeout(300); // Set Timeout for portal configuration to 300 seconds
+  if (!wm.autoConnect(Configuration._hostname.c_str()))
   {
     Log.println("failed to connect and hit timeout");
     delay(3000);
@@ -174,7 +221,13 @@ void setup()
 {
   /* Initialize Logger */
   Log.setup();
-  Log.println(String(F("ESP_Pool - Build: ")) + F(__DATE__) + " " + F(__TIME__));
+  Log.println();
+  Log.println(String(F("==============================")));
+  Log.println(String(F("---------- ESP_Pool ----------")));
+  Log.println(String(F("  Version: ")) + F(VERSION));
+  Log.println(String(F("  Build: ")) + F(__DATE__) + " " + F(__TIME__));
+  Log.println(String(F("==============================")));
+  Log.println();
 
   // Setup PIN
   pinMode(RELAY_1_PIN, OUTPUT);
@@ -184,6 +237,7 @@ void setup()
   pinMode(LED_PIN, OUTPUT);
   pinMode(FLOW_1_PIN, INPUT_PULLUP);
   pinMode(FLOW_2_PIN, INPUT_PULLUP);
+  // pinMode(WATER_LEVEL_PIN, INPUT);
 
   // Create ticker for blink LED
   tick_blinker.once(LED_TIME_NOMQTT, blinkLED);
@@ -197,14 +251,14 @@ void setup()
   /* Read configuration from SPIFFS */
   Configuration.setup();
   // Configuration.restoreDefault();
+  waterQty1 = Configuration._waterQtyA;
+  waterQty2 = Configuration._waterQtyB;
 
   // Configure and run WifiManager
   wifiSetup();
 
   /* Initialize HTTP Server */
   HTTPServer.setup();
-
-  delay(100);
 
   /* Initialize MQTT Client */
   MqttClient.setup();
@@ -247,13 +301,13 @@ void setup()
 #endif
 
   // Create ticker for update NTP time
-  updateNTP();
-  tick_ntp.once(Configuration._timeUpdateNtp, updateNTP);
+  updateTimeAndSaveData();
+  tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
 
   // Create ticker for send data to MQTT
   tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 
-  // Create ticker for compute Flow Metter
+  // Create ticker for compute Flow Metter, must be each 1 seconds
   tick_flowMetter.attach(1, computeFlowMetter);
 }
 
