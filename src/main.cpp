@@ -7,7 +7,8 @@
 #include "Mqtt.h"
 #include "settings.h"
 #include "Logger.h"
-#include "DS18B20.h"
+#include "SensorDS18B20.h"
+#include "SensorAM2301.h"
 
 // #define ENABLE_OTA    // If defined, enable Arduino OTA code.
 
@@ -16,18 +17,19 @@
 #include <ArduinoOTA.h>
 #endif
 
-static DS18B20 ds18b20_1(TEMP_1_PIN), ds18b20_2(TEMP_2_PIN);
+static SensorDS18B20 ds18b20_1(TEMP_1_PIN), ds18b20_2(TEMP_2_PIN);
+static SensorAM2301 am2301(DHT_PIN);
 
 static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
 static uint32_t flow1IntCnt, flow2IntCnt;
 
 // Value of flow
-static float flow1, flow2;         // in l/min
-static float waterQty1, waterQty2; // in l
+static float waterFlow1, waterFlow2; // in l/min
+static float waterQty1, waterQty2;   // in l
 // Value of water level
 static float waterLevel; // in cm
 // Temperature value
-static float tempFiltering1, tempFiltering2; // in °C
+static float waterTemp1, waterTemp2, intTemp; // in °C
 
 /*****************/
 /*** INTERRUPT ***/
@@ -98,28 +100,28 @@ void computeFlowMetter()
   detachInterrupt(digitalPinToInterrupt(FLOW_2_PIN));
 
   // Compute flow metter 1
-  flow1 = 0;
+  waterFlow1 = 0;
   if (flow1IntCnt > 0)
-    flow1 = FLOW_COEF_A * (ratio * flow1IntCnt) + FLOW_COEF_B;
+    waterFlow1 = FLOW_COEF_A * (ratio * flow1IntCnt) + FLOW_COEF_B;
   flow1IntCnt = 0;
 
   // Compute quantity of water (integral)
-  waterQty1 += flow1 / (60.0 * ratio);
+  waterQty1 += waterFlow1 / (60.0 * ratio);
 
   // Compute flow metter 2
-  flow2 = 0;
+  waterFlow2 = 0;
   if (flow2IntCnt > 0)
-    flow2 = FLOW_COEF_A * (ratio * flow2IntCnt) + FLOW_COEF_B;
+    waterFlow2 = FLOW_COEF_A * (ratio * flow2IntCnt) + FLOW_COEF_B;
   flow2IntCnt = 0;
 
   // Compute quantity of water (integral)
-  waterQty2 += flow2 / (60.0 * ratio);
+  waterQty2 += waterFlow2 / (60.0 * ratio);
 
   // Save current timestamp
   oldTime = currentTime;
 
-  // Log.println("flow 1 : " + String(flow1) + " L/min");
-  // Log.println("flow 2 : " + String(flow2) + " L/min");
+  // Log.println("flow 1 : " + String(waterFlow1) + " L/min");
+  // Log.println("flow 2 : " + String(waterFlow2) + " L/min");
   // Log.println("waterQty 1 : " + String(waterQty1) + " L");
   // Log.println("waterQty 2 : " + String(waterQty2) + " L");
 
@@ -133,29 +135,35 @@ void sendData()
   Log.println();
   Log.println("Send data to MQTT :");
 
-  // Read Temp 1, in °C
-  float tmp1 = ds18b20_1.readTemp();
-  tempFiltering1 = tmp1;
-  Log.println("\t temp1: \t" + String(tempFiltering1) + " °C");
-  MqttClient.publish("temp1", String(tempFiltering1));
+  // Read Water Temp 1, in °C
+  float tmp = ds18b20_1.readTemp();
+  waterTemp1 = (waterTemp1 + tmp) / 2;
+  Log.println("\t waterTemp1: \t" + String(waterTemp1) + " °C");
+  MqttClient.publish("waterTemp1", String(waterTemp1));
 
-  // Read Temp 2, in °C
-  float tmp2 = ds18b20_2.readTemp();
-  tempFiltering2 = tmp2;
-  Log.println("\t temp2: \t" + String(tempFiltering2) + " °C");
-  MqttClient.publish("temp2", String(tempFiltering2));
+  // Read Water Temp 2, in °C
+  tmp = ds18b20_2.readTemp();
+  waterTemp2 = (waterTemp2 + tmp) / 2;
+  Log.println("\t waterTemp2: \t" + String(waterTemp2) + " °C");
+  MqttClient.publish("waterTemp2", String(waterTemp2));
+
+  // Read Internal Temp, in °C
+  tmp = am2301.readTemp();
+  intTemp = (intTemp + tmp) / 2;
+  Log.println("\t intTemp: \t" + String(intTemp) + " °C");
+  MqttClient.publish("intTemp", String(intTemp));
 
   // flow metter 1, in L/min
-  Log.println("\t flow1: \t" + String(flow1) + " L/Min");
-  MqttClient.publish("flow1", String(flow1));
+  Log.println("\t waterFlow1: \t" + String(waterFlow1) + " L/Min");
+  MqttClient.publish("waterFlow1", String(waterFlow1));
 
   // Water quantity 1, in L
   Log.println("\t waterQty1: \t" + String(waterQty1) + " L");
   MqttClient.publish("waterQty1", String(waterQty1));
 
   // flow metter 2, in L/min
-  Log.println("\t flow2: \t" + String(flow2) + " L/Min");
-  MqttClient.publish("flow2", String(flow2));
+  Log.println("\t waterFlow2: \t" + String(waterFlow2) + " L/Min");
+  MqttClient.publish("waterFlow2", String(waterFlow2));
 
   // Water quantity 2, in L
   Log.println("\t waterQty2: \t" + String(waterQty2) + " L");
@@ -250,7 +258,6 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
   attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
   flow1IntCnt = flow2IntCnt = 0;
-  flow1 = flow2 = 0;
 
   /* Read configuration from SPIFFS */
   Configuration.setup();
