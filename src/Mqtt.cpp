@@ -71,8 +71,8 @@ void Mqtt::reconnect()
         publish(String("version"), String(VERSION));
         publish(String("build"), String(String(__DATE__) + " " + String(__TIME__)));
         publish(String("ip"), WiFi.localIP().toString());
-        publish(String("timeIntervalUpdate"), String(Configuration._timeSendData));
-        publish(String("timeIntervalSaveData"), String(Configuration._timeSaveData));
+        publish(String("timeSendData"), String(Configuration._timeSendData));
+        publish(String("timeSaveData"), String(Configuration._timeSaveData));
         publish(String("relay1"), String(digitalRead(RELAY_1_PIN)));
         publish(String("relay2"), String(digitalRead(RELAY_2_PIN)));
         publish(String("relay3"), String(digitalRead(RELAY_3_PIN)));
@@ -114,37 +114,45 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
   {
     int status = data.toInt();
     digitalWrite(RELAY_1_PIN, status);
-    Log.println(String("set relay 1 to ") + String(status));
+    Log.println(String("set relay 1 to: ") + String(status));
     publish("relay1", String(status));
   }
   else if (topicStr == String("relay2"))
   {
     int status = data.toInt();
     digitalWrite(RELAY_2_PIN, status);
-    Log.println(String("set relay 2 to ") + String(status));
+    Log.println(String("set relay 2 to: ") + String(status));
     publish("relay2", String(status));
   }
-  else if (topicStr == String("relay_3"))
+  else if (topicStr == String("relay3"))
   {
     int status = data.toInt();
     digitalWrite(RELAY_3_PIN, status);
-    Log.println(String("set relay 3 to ") + String(status));
+    Log.println(String("set relay 3 to: ") + String(status));
     publish("relay3", String(status));
   }
-  else if (topicStr == String("relay_4"))
+  else if (topicStr == String("relay4"))
   {
     int status = data.toInt();
     digitalWrite(RELAY_4_PIN, status);
     Log.println(String("set relay 4 to ") + String(status));
     publish("relay4", String(status));
   }
-  else if (topicStr == String("timeIntervalUpdate"))
+  else if (topicStr == String("timeSendData"))
   {
     int time = data.toInt();
-    Log.println(String("set timeSendData to ") + String(time));
+    Log.println(String("set timeSendData to: ") + String(time));
     Configuration._timeSendData = time;
     Configuration.saveConfig();
-    publish(String("timeIntervalUpdate"), String(Configuration._timeSendData));
+    publish(String("timeSendData"), String(Configuration._timeSendData));
+  }
+  else if (topicStr == String("timeSaveData"))
+  {
+    int time = data.toInt();
+    Log.println(String("set timeSaveData to: ") + String(time));
+    Configuration._timeSaveData = time;
+    Configuration.saveConfig();
+    publish(String("timeSaveData"), String(Configuration._timeSaveData));
   }
   else if (topicStr == String("hostname"))
   {
