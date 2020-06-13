@@ -13,7 +13,8 @@
 // Flow Meter (YF-B10)
 #define FLOW_1_PIN 14
 #define FLOW_2_PIN 12
-#define FLOW_CALIB_VALUE 7.5
+#define FLOW_COEF_A (float)(1 / 6)
+#define FLOW_COEF_B (float)(8 / 6)
 
 // Temperature (DS18B20)
 #define TEMP_1_PIN 25

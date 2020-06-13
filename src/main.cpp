@@ -97,27 +97,31 @@ void computeFlowMetter()
   detachInterrupt(digitalPinToInterrupt(FLOW_1_PIN));
   detachInterrupt(digitalPinToInterrupt(FLOW_2_PIN));
 
-  // Log.println();
-  // Log.println("ratio : " + String(ratio));
-  // Log.println("flow cnt 1: " + String(flow1IntCnt));
-  // Log.println("flow cnt 2: " + String(flow2IntCnt));
-
   // Compute flow metter 1
-  flow1 = (ratio * flow1IntCnt) / FLOW_CALIB_VALUE;
-  waterQty1 += flow1 / (60.0 * ratio);
+  flow1 = 0;
+  if (flow1IntCnt > 0)
+    flow1 = FLOW_COEF_A * (ratio * flow1IntCnt) + FLOW_COEF_B;
   flow1IntCnt = 0;
+
+  // Compute quantity of water (integral)
+  waterQty1 += flow1 / (60.0 * ratio);
+
   // Compute flow metter 2
-  flow2 = (ratio * flow2IntCnt) / FLOW_CALIB_VALUE;
-  waterQty2 += flow2 / (60.0 * ratio);
+  flow2 = 0;
+  if (flow2IntCnt > 0)
+    flow2 = FLOW_COEF_A * (ratio * flow2IntCnt) + FLOW_COEF_B;
   flow2IntCnt = 0;
+
+  // Compute quantity of water (integral)
+  waterQty2 += flow2 / (60.0 * ratio);
 
   // Save current timestamp
   oldTime = currentTime;
 
   // Log.println("flow 1 : " + String(flow1) + " L/min");
   // Log.println("flow 2 : " + String(flow2) + " L/min");
-  // Log.println("WaterVolume1 : " + String(waterVolume1) + " L");
-  // Log.println("WaterVolume2 : " + String(waterVolume2) + " L");
+  // Log.println("waterQty 1 : " + String(waterQty1) + " L");
+  // Log.println("waterQty 2 : " + String(waterQty2) + " L");
 
   // Enable the interrupt
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
