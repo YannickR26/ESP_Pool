@@ -3,10 +3,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
-/******* Debug **************/
-#define DEBUG_SERIAL
-// #define DEBUG_TELNET // Open a read-only telnet debug port
-
 class Logger
 {
 public:
@@ -25,7 +21,7 @@ public:
 private:
 	void send(String &s);
 	void addTime(String &s);
-#ifdef DEBUG_TELNET
+#ifdef DEBUG_BY_TELNET
 	void handleTelnetClient();
 #endif
 

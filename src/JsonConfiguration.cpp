@@ -1,6 +1,4 @@
-#include <FS.h>
 #include <SPIFFS.h>
-#include <ArduinoJson.h>
 
 #include "JsonConfiguration.h"
 #include "Logger.h"
@@ -34,8 +32,10 @@ void JsonConfiguration::setup(void)
   Log.println(String("    hostname: ") + _hostname);
   Log.println(String("    mqttIpServer: ") + _mqttIpServer);
   Log.println(String("    mqttPortServer: ") + String(_mqttPortServer));
-  Log.println(String("    timeUpdateNTP: ") + String(_timeUpdateNtp));
+  Log.println(String("    timeSaveData: ") + String(_timeSaveData));
   Log.println(String("    timeSendData: ") + String(_timeSendData));
+  Log.println(String("    waterQtyA: ") + String(_waterQtyA));
+  Log.println(String("    waterQtyB: ") + String(_waterQtyB));
 }
 
 bool JsonConfiguration::readConfig()
@@ -50,23 +50,13 @@ bool JsonConfiguration::readConfig()
     return false;
   }
 
+  uint16_t size = configFile.size();
+
   // Allocate a buffer to store contents of the file.
-  // StaticJsonDocument<512> doc;
-  DynamicJsonDocument doc(512);
+  std::unique_ptr<char[]> buf(new char[size]);
 
-  // Deserialize the JSON document
-  DeserializationError error = deserializeJson(doc, configFile);
-  if (error)
-  {
-    Log.println(F("Failed to read file, using default configuration"));
-    return false;
-  }
-
-  _hostname = doc["hostname"] | DEFAULT_HOSTNAME;
-  _mqttIpServer = doc["mqttIpServer"] | DEFAULT_MQTTIPSERVER;
-  _mqttPortServer = doc["mqttPortServer"] | DEFAULT_MQTTPORTSERVER;
-  _timeUpdateNtp = doc["ntpUpdateIntervale"] | DEFAULT_NTP_UPDATE_INTERVAL_SEC;
-  _timeSendData = doc["SendDataIntervale"] | DEFAULT_SEND_DATA_INTERVAL_SEC;
+  configFile.readBytes(buf.get(), size);
+  decodeJsonFromFile(buf.get());
 
   configFile.close();
 
@@ -75,14 +65,9 @@ bool JsonConfiguration::readConfig()
 
 bool JsonConfiguration::saveConfig()
 {
-  // StaticJsonDocument<512> doc;
   DynamicJsonDocument doc(512);
 
-  doc["hostname"] = _hostname;
-  doc["mqttIpServer"] = _mqttIpServer;
-  doc["mqttPortServer"] = _mqttPortServer;
-  doc["ntpUpdateIntervale"] = _timeUpdateNtp;
-  doc["SendDataIntervale"] = _timeSendData;
+  encodeToJson(doc);
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile)
@@ -110,11 +95,50 @@ void JsonConfiguration::restoreDefault()
   _hostname = DEFAULT_HOSTNAME;
   _mqttIpServer = DEFAULT_MQTTIPSERVER;
   _mqttPortServer = DEFAULT_MQTTPORTSERVER;
-  _timeUpdateNtp = DEFAULT_NTP_UPDATE_INTERVAL_SEC;
+  _timeSaveData = DEFAULT_NTP_UPDATE_INTERVAL_SEC;
   _timeSendData = DEFAULT_SEND_DATA_INTERVAL_SEC;
+  _waterQtyA = _waterQtyB = 0;
 
   saveConfig();
   Log.println("configuration restored.");
+}
+
+void JsonConfiguration::encodeToJson(JsonDocument &_json)
+{
+  _json.clear();
+  _json["hostname"] = _hostname;
+  _json["mqttIpServer"] = _mqttIpServer;
+  _json["mqttPortServer"] = _mqttPortServer;
+  _json["timeSaveData"] = _timeSaveData;
+  _json["timeSendData"] = _timeSendData;
+  _json["waterQtyA"] = _waterQtyA;
+  _json["waterQtyB"] = _waterQtyB;
+}
+
+uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
+{
+  DynamicJsonDocument doc(1024);
+  doc.clear();
+
+  // Deserialize the JSON document
+  DeserializationError error = deserializeJson(doc, input);
+  if (error)
+  {
+    Serial.print("Failed to deserialize JSON, error: ");
+    Serial.println(error.c_str());
+    // restoreDefault();
+    return -1;
+  }
+
+  _hostname = doc["hostname"].as<String>();
+  _mqttIpServer = doc["mqttIpServer"].as<String>();
+  _mqttPortServer = doc["mqttPortServer"].as<uint16_t>();
+  _timeSaveData = doc["timeSaveData"].as<uint16_t>();
+  _timeSendData = doc["timeSendData"].as<uint16_t>();
+  _waterQtyA = doc["waterQtyA"].as<uint32_t>();
+  _waterQtyB = doc["waterQtyB"].as<uint32_t>();
+
+  return 0;
 }
 
 /********************************************************/
