@@ -5,7 +5,7 @@
 /********************************************************/
 SensorAM2301::SensorAM2301(uint8_t pin)
 {
-    _sensor.setup(pin, DHTesp::DHT11);
+    _sensor.setup(pin, DHTesp::DHT22);
 }
 
 SensorAM2301::~SensorAM2301()

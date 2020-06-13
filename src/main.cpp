@@ -17,7 +17,7 @@
 #include <ArduinoOTA.h>
 #endif
 
-static SensorDS18B20 ds18b20_1(TEMP_1_PIN), ds18b20_2(TEMP_2_PIN);
+static SensorDS18B20 ds18b20_1(DS18B20_1_PIN); //, ds18b20_2(DS18B20_2_PIN);
 static SensorAM2301 am2301(DHT_PIN);
 
 static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
@@ -30,6 +30,8 @@ static float waterQty1, waterQty2;   // in l
 static float waterLevel; // in cm
 // Temperature value
 static float waterTemp1, waterTemp2, intTemp; // in °C
+// Humidity value
+static float intHumidity; // in %
 
 /*****************/
 /*** INTERRUPT ***/
@@ -142,16 +144,22 @@ void sendData()
   MqttClient.publish("waterTemp1", String(waterTemp1));
 
   // Read Water Temp 2, in °C
-  tmp = ds18b20_2.readTemp();
-  waterTemp2 = (waterTemp2 + tmp) / 2;
-  Log.println("\t waterTemp2: \t" + String(waterTemp2) + " °C");
-  MqttClient.publish("waterTemp2", String(waterTemp2));
+  // tmp = ds18b20_2.readTemp();
+  // waterTemp2 = (waterTemp2 + tmp) / 2;
+  // Log.println("\t waterTemp2: \t" + String(waterTemp2) + " °C");
+  // MqttClient.publish("waterTemp2", String(waterTemp2));
 
   // Read Internal Temp, in °C
   tmp = am2301.readTemp();
   intTemp = (intTemp + tmp) / 2;
   Log.println("\t intTemp: \t" + String(intTemp) + " °C");
   MqttClient.publish("intTemp", String(intTemp));
+
+  // Read Internal Humidity, in %
+  tmp = am2301.readHumidity();
+  intHumidity = (intHumidity + tmp) / 2;
+  Log.println("\t intHumidity: \t" + String(intHumidity) + " %");
+  MqttClient.publish("intHumidity", String(intHumidity));
 
   // flow metter 1, in L/min
   Log.println("\t waterFlow1: \t" + String(waterFlow1) + " L/Min");
