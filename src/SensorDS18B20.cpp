@@ -1,25 +1,25 @@
-#include "DS18B20.h"
+#include "SensorDS18B20.h"
 
 /********************************************************/
 /******************** Public Method *********************/
 /********************************************************/
-DS18B20::DS18B20(uint8_t pin)
+SensorDS18B20::SensorDS18B20(uint8_t pin)
 {
     _oneWire = OneWire(pin);
-    _sensors = DallasTemperature(&_oneWire);
-    _sensors.begin();
+    _sensor = DallasTemperature(&_oneWire);
+    _sensor.begin();
 }
 
-DS18B20::~DS18B20()
+SensorDS18B20::~SensorDS18B20()
 {
 }
 
-float DS18B20::readTemp()
+float SensorDS18B20::readTemp()
 {
     // Send the command to get temperatures
-    _sensors.requestTemperatures();
+    _sensor.requestTemperatures();
 
-    return _sensors.getTempCByIndex(0);
+    return _sensor.getTempCByIndex(0);
 }
 
 /********************************************************/

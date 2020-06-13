@@ -3,16 +3,16 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-class DS18B20
+class SensorDS18B20
 {
 public:
-    DS18B20(uint8_t pin);
-    virtual ~DS18B20();
+    SensorDS18B20(uint8_t pin);
+    virtual ~SensorDS18B20();
 
     float readTemp();
 
 protected:
 private:
     OneWire _oneWire;
-    DallasTemperature _sensors;
+    DallasTemperature _sensor;
 };
