@@ -5,8 +5,12 @@
 #include <WiFi.h>
 #include <WiFiManager.h>
 #include "Logger.h"
+#include "RollerShutter.h"
+#include "SolenoidValve.h"
 
 WiFiClient espClient;
+extern RollerShutter rollerShutter;
+extern SolenoidValve valve;
 
 /********************************************************/
 /******************** Public Method *********************/
@@ -67,7 +71,6 @@ void Mqtt::reconnect()
       {
         Log.println("connected !");
         // Once connected, publish an announcement...
-
         publish(String("version"), String(VERSION));
         publish(String("build"), String(String(__DATE__) + " " + String(__TIME__)));
         publish(String("ip"), WiFi.localIP().toString());
@@ -79,6 +82,9 @@ void Mqtt::reconnect()
         publish(String("relay4"), String(digitalRead(RELAY_4_PIN)));
         publish(String("waterQty1"), String(Configuration._waterQtyA));
         publish(String("waterQty2"), String(Configuration._waterQtyB));
+        publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
+        publish(String("rollerShutter"), String("stop"));
+        publish(String("solenoidValve"), String("close"));
         // ... and resubscribe
         clientMqtt.subscribe(String(Configuration._hostname + "/set/#").c_str());
       }
@@ -187,6 +193,41 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Configuration._waterQtyB = qty;
     Configuration.saveConfig();
     publish(String("waterQty2"), String(Configuration._waterQtyB));
+  }
+  else if (topicStr == String("rollerShutterTimeout"))
+  {
+    int timeout = data.toInt();
+    Log.println("Set rollerShutterTimeout to: " + String(timeout) + " s");
+    rollerShutter.setTimeout(timeout);
+    Configuration._rollerShutterTimeout = timeout;
+    Configuration.saveConfig();
+    publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
+  }
+  else if (topicStr == String("rollerShutter"))
+  {
+    Log.println("Set rollerShutter to: " + data);
+    if (data == String("open"))
+      rollerShutter.open();
+    else if (data == String("stop"))
+      rollerShutter.close();
+    else if (data == String("close"))
+      rollerShutter.close();
+    publish(String("rollerShutter"), String(data));
+  }
+  else if (topicStr == String("solenoidValve"))
+  {
+    Log.println("Set solenoidValve to: " + data);
+    if (data == String("open"))
+    {
+      Log.println("Open solenoidValve !");
+      valve.open();
+    }
+    else if (data == String("close"))
+    {
+      Log.println("Close solenoidValve !");
+      valve.close();
+    }
+    publish(String("solenoidValve"), String(data));
   }
   else
   {
