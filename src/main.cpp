@@ -9,6 +9,8 @@
 #include "Logger.h"
 #include "SensorDS18B20.h"
 #include "SensorAM2301.h"
+#include "RollerShutter.h"
+#include "SolenoidValve.h"
 
 // #define ENABLE_OTA    // If defined, enable Arduino OTA code.
 
@@ -17,8 +19,10 @@
 #include <ArduinoOTA.h>
 #endif
 
-static SensorDS18B20 ds18b20_1(DS18B20_1_PIN); //, ds18b20_2(DS18B20_2_PIN);
-static SensorAM2301 am2301(DHT_PIN);
+SensorDS18B20 ds18b20_1(DS18B20_1_PIN); //, ds18b20_2(DS18B20_2_PIN);
+SensorAM2301 am2301(DHT_PIN);
+RollerShutter rollerShutter(RELAY_1_PIN, RELAY_2_PIN);
+SolenoidValve valve(RELAY_3_PIN, RELAY_4_PIN);
 
 static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
 static uint32_t flow1IntCnt, flow2IntCnt;
@@ -87,7 +91,8 @@ void updateTimeAndSaveData()
   Configuration.saveConfig();
 
   // Restart ticker
-  tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
+  if (Configuration._timeSaveData > 0)
+    tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
 }
 
 // Call every 1 second, so the counter is equal to frequency
@@ -187,7 +192,8 @@ void sendData()
   MqttClient.publish("waterLevel", String((int)waterLevel));
 
   // Restart ticker
-  tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
+  if (Configuration._timeSendData > 0)
+    tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 }
 
 /************/
@@ -272,6 +278,7 @@ void setup()
   // Configuration.restoreDefault();
   waterQty1 = Configuration._waterQtyA;
   waterQty2 = Configuration._waterQtyB;
+  rollerShutter.setTimeout(Configuration._rollerShutterTimeout);
 
   // Configure and run WifiManager
   wifiSetup();
@@ -321,9 +328,13 @@ void setup()
 
   // Create ticker for update NTP time
   updateTimeAndSaveData();
+  if (Configuration._timeSaveData == 0)
+    Configuration._timeSaveData = 1;
   tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
 
   // Create ticker for send data to MQTT
+  if (Configuration._timeSendData == 0)
+    Configuration._timeSendData = 1;
   tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 
   // Create ticker for compute Flow Metter, must be each 1 seconds
