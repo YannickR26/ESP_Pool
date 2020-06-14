@@ -36,6 +36,7 @@ void JsonConfiguration::setup(void)
   Log.println(String("    timeSendData: ") + String(_timeSendData));
   Log.println(String("    waterQtyA: ") + String(_waterQtyA));
   Log.println(String("    waterQtyB: ") + String(_waterQtyB));
+  Log.println(String("    rollerShutterTimeout: ") + String(_rollerShutterTimeout));
 }
 
 bool JsonConfiguration::readConfig()
@@ -95,9 +96,10 @@ void JsonConfiguration::restoreDefault()
   _hostname = DEFAULT_HOSTNAME;
   _mqttIpServer = DEFAULT_MQTTIPSERVER;
   _mqttPortServer = DEFAULT_MQTTPORTSERVER;
-  _timeSaveData = DEFAULT_NTP_UPDATE_INTERVAL_SEC;
+  _timeSaveData = DEFAULT_SAVE_DATA_INTERVAL_SEC;
   _timeSendData = DEFAULT_SEND_DATA_INTERVAL_SEC;
   _waterQtyA = _waterQtyB = 0;
+  _rollerShutterTimeout = DEFAULT_ROLLER_SHUTTER_TIMEOUT;
 
   saveConfig();
   Log.println("configuration restored.");
@@ -113,6 +115,7 @@ void JsonConfiguration::encodeToJson(JsonDocument &_json)
   _json["timeSendData"] = _timeSendData;
   _json["waterQtyA"] = _waterQtyA;
   _json["waterQtyB"] = _waterQtyB;
+  _json["rollerShutterTimeout"] = _rollerShutterTimeout;
 }
 
 uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
@@ -131,12 +134,17 @@ uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
   }
 
   _hostname = doc["hostname"].as<String>();
+  if (_hostname == NULL)
+    _hostname = DEFAULT_HOSTNAME;
   _mqttIpServer = doc["mqttIpServer"].as<String>();
-  _mqttPortServer = doc["mqttPortServer"].as<uint16_t>();
-  _timeSaveData = doc["timeSaveData"].as<uint16_t>();
-  _timeSendData = doc["timeSendData"].as<uint16_t>();
-  _waterQtyA = doc["waterQtyA"].as<uint32_t>();
-  _waterQtyB = doc["waterQtyB"].as<uint32_t>();
+  if (_mqttIpServer == NULL)
+    _mqttIpServer = DEFAULT_MQTTIPSERVER;
+  _mqttPortServer = doc["mqttPortServer"].as<uint16_t>() | DEFAULT_MQTTPORTSERVER;
+  _timeSaveData = doc["timeSaveData"].as<uint16_t>() | DEFAULT_SAVE_DATA_INTERVAL_SEC;
+  _timeSendData = doc["timeSendData"].as<uint16_t>() | DEFAULT_SEND_DATA_INTERVAL_SEC;
+  _waterQtyA = doc["waterQtyA"].as<uint32_t>() | 0;
+  _waterQtyB = doc["waterQtyB"].as<uint32_t>() | 0;
+  _rollerShutterTimeout = doc["rollerShutterTimeout"].as<uint16_t>() | DEFAULT_ROLLER_SHUTTER_TIMEOUT;
 
   return 0;
 }
