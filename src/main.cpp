@@ -19,10 +19,10 @@
 #include <ArduinoOTA.h>
 #endif
 
-SensorDS18B20 ds18b20_1(DS18B20_1_PIN); //, ds18b20_2(DS18B20_2_PIN);
-SensorAM2301 am2301(DHT_PIN);
-RollerShutter rollerShutter(RELAY_1_PIN, RELAY_2_PIN);
-SolenoidValve valve(RELAY_3_PIN, RELAY_4_PIN);
+SensorDS18B20 ds18b20(DS18B20_PIN);
+SensorAM2301 am2301_int(DHT_1_PIN), am2301_ext(DHT_2_PIN);
+SolenoidValve valve(RELAY_1_PIN, RELAY_2_PIN);
+RollerShutter rollerShutter(RELAY_3_PIN, RELAY_4_PIN);
 
 static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
 static uint32_t flow1IntCnt, flow2IntCnt;
@@ -33,7 +33,7 @@ static float waterQty1, waterQty2;   // in l
 // Value of water level
 static float waterLevel; // in cm
 // Temperature value
-static float waterTemp1, waterTemp2, intTemp; // in °C
+static float waterTemp1, intTemp, extTemp; // in °C
 // Humidity value
 static float intHumidity; // in %
 
@@ -142,29 +142,35 @@ void sendData()
   Log.println();
   Log.println("Send data to MQTT :");
 
-  // Read Water Temp 1, in °C
-  float tmp = ds18b20_1.readTemp();
+  // Read Water Temp, in °C
+  float tmp = ds18b20.readTemp();
   waterTemp1 = (waterTemp1 + tmp) / 2;
   Log.println("\t waterTemp1: \t" + String(waterTemp1) + " °C");
   MqttClient.publish("waterTemp1", String(waterTemp1));
 
-  // Read Water Temp 2, in °C
-  // tmp = ds18b20_2.readTemp();
-  // waterTemp2 = (waterTemp2 + tmp) / 2;
-  // Log.println("\t waterTemp2: \t" + String(waterTemp2) + " °C");
-  // MqttClient.publish("waterTemp2", String(waterTemp2));
-
   // Read Internal Temp, in °C
-  tmp = am2301.readTemp();
+  tmp = am2301_int.readTemp();
   intTemp = (intTemp + tmp) / 2;
-  Log.println("\t intTemp: \t" + String(intTemp) + " °C" + " (" + String(am2301.getStatus()) + ")");
+  Log.println("\t intTemp: \t" + String(intTemp) + " °C" + " (" + String(am2301_int.getStatus()) + ")");
   MqttClient.publish("intTemp", String(intTemp));
 
   // Read Internal Humidity, in %
-  tmp = am2301.readHumidity();
+  tmp = am2301_int.readHumidity();
   intHumidity = (intHumidity + tmp) / 2;
   Log.println("\t intHumidity: \t" + String(intHumidity) + " %");
   MqttClient.publish("intHumidity", String(intHumidity));
+
+  // Read External Temp, in °C
+  tmp = am2301_ext.readTemp();
+  extTemp = (extTemp + tmp) / 2;
+  Log.println("\t extTemp: \t" + String(extTemp) + " °C" + " (" + String(am2301_ext.getStatus()) + ")");
+  MqttClient.publish("extTemp", String(extTemp));
+
+  // Read External Humidity, in %
+  tmp = am2301_ext.readHumidity();
+  intHumidity = (intHumidity + tmp) / 2;
+  Log.println("\t extHumidity: \t" + String(intHumidity) + " %");
+  MqttClient.publish("extHumidity", String(intHumidity));
 
   // flow metter 1, in L/min
   Log.println("\t waterFlow1: \t" + String(waterFlow1) + " L/Min");
