@@ -19,10 +19,10 @@
 
 // Temperature :
 // DS18B20
-#define DS18B20_1_PIN 25
-#define DS18B20_2_PIN 27
+#define DS18B20_PIN 16
 // AM2301
-#define DHT_PIN 27
+#define DHT_1_PIN 25
+#define DHT_2_PIN 27
 
 // Relay
 #define RELAY_1_PIN 23

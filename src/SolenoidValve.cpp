@@ -21,8 +21,8 @@ SolenoidValve::~SolenoidValve()
 
 void SolenoidValve::open()
 {
-    digitalWrite(_pinNegativePower, 1);
-    digitalWrite(_pinPositivePower, 0);
+    digitalWrite(_pinPositivePower, 1);
+    digitalWrite(_pinNegativePower, 0);
     delay(500);
     digitalWrite(_pinNegativePower, 1);
     digitalWrite(_pinPositivePower, 1);
@@ -33,8 +33,8 @@ void SolenoidValve::open()
 
 void SolenoidValve::close()
 {
-    digitalWrite(_pinPositivePower, 1);
-    digitalWrite(_pinNegativePower, 0);
+    digitalWrite(_pinNegativePower, 1);
+    digitalWrite(_pinPositivePower, 0);
     delay(500);
     digitalWrite(_pinPositivePower, 1);
     digitalWrite(_pinNegativePower, 1);
