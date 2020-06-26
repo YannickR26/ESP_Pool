@@ -76,10 +76,6 @@ void Mqtt::reconnect()
         publish(String("ip"), WiFi.localIP().toString());
         publish(String("timeSendData"), String(Configuration._timeSendData));
         publish(String("timeSaveData"), String(Configuration._timeSaveData));
-        publish(String("relay1"), String(digitalRead(RELAY_1_PIN)));
-        publish(String("relay2"), String(digitalRead(RELAY_2_PIN)));
-        publish(String("relay3"), String(digitalRead(RELAY_3_PIN)));
-        publish(String("relay4"), String(digitalRead(RELAY_4_PIN)));
         publish(String("waterQty1"), String(Configuration._waterQtyA));
         publish(String("waterQty2"), String(Configuration._waterQtyB));
         publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
@@ -115,35 +111,7 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
   String topicStr(topic);
   topicStr.remove(0, topicStr.lastIndexOf('/') + 1);
 
-  if (topicStr == String("relay1"))
-  {
-    int status = data.toInt();
-    digitalWrite(RELAY_1_PIN, status);
-    Log.println(String("set relay 1 to: ") + String(status));
-    publish("relay1", String(status));
-  }
-  else if (topicStr == String("relay2"))
-  {
-    int status = data.toInt();
-    digitalWrite(RELAY_2_PIN, status);
-    Log.println(String("set relay 2 to: ") + String(status));
-    publish("relay2", String(status));
-  }
-  else if (topicStr == String("relay3"))
-  {
-    int status = data.toInt();
-    digitalWrite(RELAY_3_PIN, status);
-    Log.println(String("set relay 3 to: ") + String(status));
-    publish("relay3", String(status));
-  }
-  else if (topicStr == String("relay4"))
-  {
-    int status = data.toInt();
-    digitalWrite(RELAY_4_PIN, status);
-    Log.println(String("set relay 4 to ") + String(status));
-    publish("relay4", String(status));
-  }
-  else if (topicStr == String("timeSendData"))
+  if (topicStr == String("timeSendData"))
   {
     int time = data.toInt();
     Log.println(String("set timeSendData to: ") + String(time));
