@@ -7,27 +7,28 @@
 #define DEFAULT_MQTTIPSERVER "192.168.1.201"
 #define DEFAULT_MQTTPORTSERVER 1883
 
-#define DEFAULT_NTP_UPDATE_INTERVAL_SEC (1 * 3600) // Update time from NTP server every 1 hours
-#define DEFAULT_SEND_DATA_INTERVAL_SEC 5           // Log data every 5 secondes
+#define DEFAULT_SAVE_DATA_INTERVAL_SEC  (1 * 3600)  // Update time from NTP server and save data every 1 hours
+#define DEFAULT_SEND_DATA_INTERVAL_SEC  5           // Log data every 5 secondes
+#define DEFAULT_ROLLER_SHUTTER_TIMEOUT  60          // 1 minutes timeout
 
 // Flow Meter (YF-B10)
 #define FLOW_1_PIN 14
 #define FLOW_2_PIN 12
-#define FLOW_COEF_A (float)(1 / 6)
-#define FLOW_COEF_B (float)(8 / 6)
+#define FLOW_COEF_A 6               // A=1/6 in reality
+#define FLOW_COEF_B (float)(8 / 6)  // B=8/6 in reality
 
-// Temperature (DS18B20)
-#define TEMP_1_PIN 25
-#define TEMP_2_PIN 27
+// Temperature :
+// DS18B20
+#define DS18B20_1_PIN 25
+#define DS18B20_2_PIN 27
+// AM2301
+#define DHT_PIN 27
 
 // Relay
 #define RELAY_1_PIN 23
 #define RELAY_2_PIN 22
 #define RELAY_3_PIN 19
 #define RELAY_4_PIN 18
-
-// DHT
-#define DHT_PIN 16
 
 // Water level
 #define WATER_LEVEL_PIN 36

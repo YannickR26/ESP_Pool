@@ -108,10 +108,9 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
   Log.print("] ");
   for (unsigned int i = 0; i < length; i++)
   {
-    Log.print(String(payload[i]));
     data += (char)payload[i];
   }
-  Log.println();
+  Log.println(data);
 
   String topicStr(topic);
   topicStr.remove(0, topicStr.lastIndexOf('/') + 1);
@@ -209,25 +208,17 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     if (data == String("open"))
       rollerShutter.open();
     else if (data == String("stop"))
-      rollerShutter.close();
+      rollerShutter.stop();
     else if (data == String("close"))
       rollerShutter.close();
-    publish(String("rollerShutter"), String(data));
   }
   else if (topicStr == String("solenoidValve"))
   {
     Log.println("Set solenoidValve to: " + data);
     if (data == String("open"))
-    {
-      Log.println("Open solenoidValve !");
       valve.open();
-    }
     else if (data == String("close"))
-    {
-      Log.println("Close solenoidValve !");
       valve.close();
-    }
-    publish(String("solenoidValve"), String(data));
   }
   else
   {

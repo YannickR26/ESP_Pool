@@ -23,6 +23,11 @@ float SensorAM2301::readHumidity()
     return _sensor.getHumidity();
 }
 
+const char *SensorAM2301::getStatus()
+{
+    return _sensor.getStatusString();
+}
+
 /********************************************************/
 /******************** Private Method ********************/
 /********************************************************/

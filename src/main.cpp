@@ -109,7 +109,7 @@ void computeFlowMetter()
   // Compute flow metter 1
   waterFlow1 = 0;
   if (flow1IntCnt > 0)
-    waterFlow1 = FLOW_COEF_A * (ratio * flow1IntCnt) + FLOW_COEF_B;
+    waterFlow1 = (ratio * flow1IntCnt) / FLOW_COEF_A + FLOW_COEF_B;
   flow1IntCnt = 0;
 
   // Compute quantity of water (integral)
@@ -118,7 +118,7 @@ void computeFlowMetter()
   // Compute flow metter 2
   waterFlow2 = 0;
   if (flow2IntCnt > 0)
-    waterFlow2 = FLOW_COEF_A * (ratio * flow2IntCnt) + FLOW_COEF_B;
+    waterFlow2 = (ratio * flow2IntCnt) / FLOW_COEF_A + FLOW_COEF_B;
   flow2IntCnt = 0;
 
   // Compute quantity of water (integral)
@@ -157,7 +157,7 @@ void sendData()
   // Read Internal Temp, in °C
   tmp = am2301.readTemp();
   intTemp = (intTemp + tmp) / 2;
-  Log.println("\t intTemp: \t" + String(intTemp) + " °C");
+  Log.println("\t intTemp: \t" + String(intTemp) + " °C" + " (" + String(am2301.getStatus()) + ")");
   MqttClient.publish("intTemp", String(intTemp));
 
   // Read Internal Humidity, in %
@@ -326,7 +326,7 @@ void setup()
   Log.println("");
 #endif
 
-  // Create ticker for update NTP time
+  // Create ticker for update NTP time and save data
   updateTimeAndSaveData();
   if (Configuration._timeSaveData == 0)
     Configuration._timeSaveData = 1;

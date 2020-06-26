@@ -10,6 +10,7 @@ public:
 
     float readTemp();
     float readHumidity();
+    const char *getStatus();
 
 protected:
 private:
