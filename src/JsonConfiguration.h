@@ -27,6 +27,8 @@ public:
 	uint16_t _timeSendData;
 	uint32_t _waterQtyA, _waterQtyB;
 	uint16_t _rollerShutterTimeout;
+	uint16_t _solenoidValveTimeout;
+	uint16_t _solenoidValveMaxWaterQty;
 
 private:
 };
