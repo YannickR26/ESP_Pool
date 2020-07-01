@@ -10,6 +10,7 @@ public:
 	virtual ~Logger(){};
 
 	void setup();
+	void setupTelnet();
 	void handle();
 
 	void println(const String &s = String());

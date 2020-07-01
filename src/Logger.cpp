@@ -30,12 +30,15 @@ void Logger::setup()
   println();
   println("Starting...");
 #endif
+}
 
+void Logger::setupTelnet()
+{
 #ifdef DEBUG_BY_TELNET
   // Setup telnet server for remote debug output
-  telnetServer.setNoDelay(true);
   telnetServer.begin();
-  println("Telnet: Started on port 23 - IP:" + WiFi.localIP().toString());
+  telnetServer.setNoDelay(true);
+  println("Telnet: Started on port 23 - IP: " + WiFi.localIP().toString());
 #endif
 }
 
