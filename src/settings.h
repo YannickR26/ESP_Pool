@@ -1,7 +1,7 @@
 #pragma once
 
 // Version
-#define VERSION "V1.0.0"
+#define VERSION "V1.1.0"
 
 #define DEFAULT_HOSTNAME "ESP_Pool"
 #define DEFAULT_MQTTIPSERVER "192.168.1.201"
@@ -10,6 +10,8 @@
 #define DEFAULT_SAVE_DATA_INTERVAL_SEC  (1 * 3600)  // Update time from NTP server and save data every 1 hours
 #define DEFAULT_SEND_DATA_INTERVAL_SEC  5           // Log data every 5 secondes
 #define DEFAULT_ROLLER_SHUTTER_TIMEOUT  60          // 1 minutes timeout
+#define DEFAULT_SOLENOID_VALVE_TIMEOUT  30*60       // 30 minutes timeout
+#define DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER  500   // 500 L max
 
 // Flow Meter (YF-B10)
 #define FLOW_1_PIN 14
