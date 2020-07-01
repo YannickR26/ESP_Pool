@@ -9,6 +9,7 @@
 #include "SolenoidValve.h"
 
 WiFiClient espClient;
+extern float waterQty1, waterQty2;   // in l
 extern RollerShutter rollerShutter;
 extern SolenoidValve valve;
 
@@ -67,7 +68,7 @@ void Mqtt::reconnect()
       String clientId = "ESP8266Client-";
       clientId += String(random(0xffff), HEX);
       // Attempt to connect
-      if (clientMqtt.connect(clientId.c_str()))
+      if (clientMqtt.connect(clientId.c_str(), 0, 1, 0, 0))
       {
         Log.println("connected !");
         // Once connected, publish an announcement...
@@ -81,8 +82,10 @@ void Mqtt::reconnect()
         publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
         publish(String("rollerShutter"), String("stop"));
         publish(String("solenoidValve"), String("close"));
+        publish(String("solenoidValveTimeout"), String(Configuration._solenoidValveTimeout));
+        publish(String("solenoidValveMaxWaterQty"), String(Configuration._solenoidValveMaxWaterQty));
         // ... and resubscribe
-        clientMqtt.subscribe(String(Configuration._hostname + "/set/#").c_str());
+        clientMqtt.subscribe(String(Configuration._hostname + "/set/#").c_str(), 1);
       }
       else
       {
@@ -151,6 +154,7 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Log.println("Set waterQty1 to: " + String(qty) + " L");
     Configuration._waterQtyA = qty;
     Configuration.saveConfig();
+    waterQty1 = qty;
     publish(String("waterQty1"), String(Configuration._waterQtyA));
   }
   else if (topicStr == String("waterQty2"))
@@ -159,6 +163,7 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Log.println("Set waterQty2 to: " + String(qty) + " L");
     Configuration._waterQtyB = qty;
     Configuration.saveConfig();
+    waterQty2 = qty;
     publish(String("waterQty2"), String(Configuration._waterQtyB));
   }
   else if (topicStr == String("rollerShutterTimeout"))
@@ -187,6 +192,24 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
       valve.open();
     else if (data == String("close"))
       valve.close();
+  }
+  else if (topicStr == String("solenoidValveTimeout"))
+  {
+    int timeout = data.toInt();
+    Log.println("Set solenoidValveTimeout to: " + String(timeout) + " s");
+    valve.setTimeout(timeout);
+    Configuration._solenoidValveTimeout = timeout;
+    Configuration.saveConfig();
+    publish(String("solenoidValveTimeout"), String(Configuration._solenoidValveTimeout));
+  }
+  else if (topicStr == String("solenoidValveMaxWaterQty"))
+  {
+    int maxQty = data.toInt();
+    Log.println("Set solenoidValveMaxWaterQty to: " + String(maxQty) + " L");
+    valve.setMaxWaterQuantity(maxQty);
+    Configuration._solenoidValveMaxWaterQty = maxQty;
+    Configuration.saveConfig();
+    publish(String("solenoidValveMaxWaterQty"), String(Configuration._solenoidValveMaxWaterQty));
   }
   else
   {
