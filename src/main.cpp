@@ -29,9 +29,9 @@ static uint32_t flow1IntCnt, flow2IntCnt;
 
 // Value of flow
 static float waterFlow1, waterFlow2; // in l/min
-static float waterQty1, waterQty2;   // in l
+float waterQty1, waterQty2;   // in l
 // Value of water level
-static float waterLevel; // in cm
+float waterLevel; // in cm
 // Temperature value
 static float waterTemp1, intTemp, extTemp; // in °C
 // Humidity value
@@ -131,6 +131,13 @@ void computeFlowMetter()
   // Log.println("flow 2 : " + String(waterFlow2) + " L/min");
   // Log.println("waterQty 1 : " + String(waterQty1) + " L");
   // Log.println("waterQty 2 : " + String(waterQty2) + " L");
+  
+  // Compute Water level, in cm
+  uint16_t adc = analogRead(WATER_LEVEL_PIN);
+  float valueInCm = WATER_LEVEL_COEF_A * adc + WATER_LEVEL_COEF_B;
+  if (valueInCm < 0)
+    valueInCm = 0;
+  waterLevel = (waterLevel * 59 + valueInCm * 1) / 60;
 
   // Enable the interrupt
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
@@ -139,6 +146,8 @@ void computeFlowMetter()
 
 void sendData()
 {
+  tick_sendDataMqtt.detach();
+
   Log.println();
   Log.println("Send data to MQTT :");
 
@@ -189,17 +198,11 @@ void sendData()
   MqttClient.publish("waterQty2", String(waterQty2));
 
   // Water level, in cm
-  uint16_t adc = analogRead(WATER_LEVEL_PIN);
-  float valueInCm = WATER_LEVEL_COEF_A * adc + WATER_LEVEL_COEF_B;
-  if (valueInCm < 0)
-    valueInCm = 0;
-  waterLevel = (waterLevel + valueInCm) / 2;
-  Log.println("\t waterLevel: \t" + String((int)waterLevel) + " cm");
-  MqttClient.publish("waterLevel", String((int)waterLevel));
+  Log.println("\t waterLevel: \t" + String(waterLevel) + " cm");
+  MqttClient.publish("waterLevel", String(waterLevel));
 
   // Restart ticker
-  if (Configuration._timeSendData > 0)
-    tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
+  tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 }
 
 /************/
@@ -215,7 +218,7 @@ void wifiSetup()
   WiFiManagerParameter custom_mqtt_hostname("hostname", "hostname", Configuration._hostname.c_str(), 60);
   WiFiManagerParameter custom_mqtt_server("server", "mqtt ip", Configuration._mqttIpServer.c_str(), 40);
   WiFiManagerParameter custom_mqtt_port("port", "mqtt port", String(Configuration._mqttPortServer).c_str(), 6);
-  WiFiManagerParameter custom_time_update("timeUpdate", "time update data (s)", String(Configuration._timeSendData).c_str(), 6);
+  WiFiManagerParameter custom_time_update("timeSendData", "time update data (s)", String(Configuration._timeSendData).c_str(), 6);
 
   // add all your parameters here
   wm.addParameter(&custom_mqtt_hostname);
@@ -262,22 +265,17 @@ void setup()
   Log.println();
 
   // Setup PIN
-  pinMode(RELAY_1_PIN, OUTPUT);
-  pinMode(RELAY_2_PIN, OUTPUT);
-  pinMode(RELAY_3_PIN, OUTPUT);
-  pinMode(RELAY_4_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
-  pinMode(FLOW_1_PIN, INPUT_PULLUP);
-  pinMode(FLOW_2_PIN, INPUT_PULLUP);
-  // pinMode(WATER_LEVEL_PIN, INPUT);
+  pinMode(FLOW_1_PIN, INPUT);
+  pinMode(FLOW_2_PIN, INPUT);
 
   // Create ticker for blink LED
   tick_blinker.once(LED_TIME_NOMQTT, blinkLED);
 
   // Attach interrupt for compute frequency
+  flow1IntCnt = flow2IntCnt = 0;
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
   attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
-  flow1IntCnt = flow2IntCnt = 0;
 
   /* Read configuration from SPIFFS */
   Configuration.setup();
@@ -285,6 +283,8 @@ void setup()
   waterQty1 = Configuration._waterQtyA;
   waterQty2 = Configuration._waterQtyB;
   rollerShutter.setTimeout(Configuration._rollerShutterTimeout);
+  valve.setTimeout(Configuration._solenoidValveTimeout);
+  valve.setMaxWaterQuantity(Configuration._solenoidValveMaxWaterQty);
 
   // Configure and run WifiManager
   wifiSetup();
@@ -294,6 +294,8 @@ void setup()
 
   /* Initialize MQTT Client */
   MqttClient.setup();
+
+  Log.setupTelnet();
 
   // Init OTA
 #ifdef ENABLE_OTA
@@ -355,6 +357,7 @@ void loop()
   MqttClient.handle();
   Log.handle();
   HTTPServer.handle();
+  valve.handle();
 
 #ifdef ENABLE_OTA
   ArduinoOTA.handle();
