@@ -29,13 +29,6 @@ static uint32_t flow1IntCnt, flow2IntCnt;
 
 // Value of flow
 static float waterFlow1, waterFlow2; // in l/min
-float waterQty1, waterQty2;   // in l
-// Value of water level
-float waterLevel; // in cm
-// Temperature value
-static float waterTemp1, intTemp, extTemp; // in °C
-// Humidity value
-static float intHumidity; // in %
 
 /*****************/
 /*** INTERRUPT ***/
@@ -86,8 +79,6 @@ void updateTimeAndSaveData()
   }
 
   Log.println("Save data");
-  Configuration._waterQtyA = waterQty1;
-  Configuration._waterQtyB = waterQty2;
   Configuration.saveConfig();
 
   // Restart ticker
@@ -109,20 +100,20 @@ void computeFlowMetter()
   // Compute flow metter 1
   waterFlow1 = 0;
   if (flow1IntCnt > 0)
-    waterFlow1 = (ratio * flow1IntCnt) / FLOW_COEF_A + FLOW_COEF_B;
+    waterFlow1 = (ratio * flow1IntCnt) * FLOW_COEF_A + FLOW_COEF_B;
   flow1IntCnt = 0;
 
   // Compute quantity of water (integral)
-  waterQty1 += waterFlow1 / (60.0 * ratio);
+  Configuration._waterQtyA += waterFlow1 / (60.0 * ratio);
 
   // Compute flow metter 2
-  waterFlow2 = 0;
-  if (flow2IntCnt > 0)
-    waterFlow2 = (ratio * flow2IntCnt) / FLOW_COEF_A + FLOW_COEF_B;
-  flow2IntCnt = 0;
+  // waterFlow2 = 0;
+  // if (flow2IntCnt > 0)
+  //   waterFlow2 = (ratio * flow2IntCnt) / FLOW_COEF_A + FLOW_COEF_B;
+  // flow2IntCnt = 0;
 
-  // Compute quantity of water (integral)
-  waterQty2 += waterFlow2 / (60.0 * ratio);
+  // // Compute quantity of water (integral)
+  // Configuration._waterQtyB += waterFlow2 / (60.0 * ratio);
 
   // Save current timestamp
   oldTime = currentTime;
@@ -137,7 +128,7 @@ void computeFlowMetter()
   float valueInCm = WATER_LEVEL_COEF_A * adc + WATER_LEVEL_COEF_B;
   if (valueInCm < 0)
     valueInCm = 0;
-  waterLevel = (waterLevel * 59 + valueInCm * 1) / 60;
+  Configuration._waterLevel = (Configuration._waterLevel * 59 + valueInCm * 1) / 60;
 
   // Enable the interrupt
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
@@ -153,53 +144,53 @@ void sendData()
 
   // Read Water Temp, in °C
   float tmp = ds18b20.readTemp();
-  waterTemp1 = (waterTemp1 + tmp) / 2;
-  Log.println("\t waterTemp1: \t" + String(waterTemp1) + " °C");
-  MqttClient.publish("waterTemp1", String(waterTemp1));
+  Configuration._waterTemp = (Configuration._waterTemp + tmp) / 2;
+  Log.println("\t waterTemp1: \t" + String(Configuration._waterTemp) + " °C");
+  MqttClient.publish(String("waterTemp1"), String(Configuration._waterTemp));
 
   // Read Internal Temp, in °C
   tmp = am2301_int.readTemp();
-  intTemp = (intTemp + tmp) / 2;
-  Log.println("\t intTemp: \t" + String(intTemp) + " °C" + " (" + String(am2301_int.getStatus()) + ")");
-  MqttClient.publish("intTemp", String(intTemp));
+  Configuration._intTemp = (Configuration._intTemp + tmp) / 2;
+  Log.println("\t intTemp: \t" + String(Configuration._intTemp) + " °C" + " (" + String(am2301_int.getStatus()) + ")");
+  MqttClient.publish(String("intTemp"), String(Configuration._intTemp));
 
   // Read Internal Humidity, in %
   tmp = am2301_int.readHumidity();
-  intHumidity = (intHumidity + tmp) / 2;
-  Log.println("\t intHumidity: \t" + String(intHumidity) + " %");
-  MqttClient.publish("intHumidity", String(intHumidity));
+  Configuration._intHumidity = (Configuration._intHumidity + tmp) / 2;
+  Log.println("\t intHumidity: \t" + String(Configuration._intHumidity) + " %");
+  MqttClient.publish(String("intHumidity"), String(Configuration._intHumidity));
 
   // Read External Temp, in °C
   tmp = am2301_ext.readTemp();
-  extTemp = (extTemp + tmp) / 2;
-  Log.println("\t extTemp: \t" + String(extTemp) + " °C" + " (" + String(am2301_ext.getStatus()) + ")");
-  MqttClient.publish("extTemp", String(extTemp));
+  Configuration._extTemp = (Configuration._extTemp + tmp) / 2;
+  Log.println("\t extTemp: \t" + String(Configuration._extTemp) + " °C" + " (" + String(am2301_ext.getStatus()) + ")");
+  MqttClient.publish(String("extTemp"), String(Configuration._extTemp));
 
   // Read External Humidity, in %
   tmp = am2301_ext.readHumidity();
-  intHumidity = (intHumidity + tmp) / 2;
-  Log.println("\t extHumidity: \t" + String(intHumidity) + " %");
-  MqttClient.publish("extHumidity", String(intHumidity));
+  Configuration._extHumidity = (Configuration._extHumidity + tmp) / 2;
+  Log.println("\t extHumidity: \t" + String(Configuration._extHumidity) + " %");
+  MqttClient.publish(String("extHumidity"), String(Configuration._extHumidity));
 
   // flow metter 1, in L/min
   Log.println("\t waterFlow1: \t" + String(waterFlow1) + " L/Min");
-  MqttClient.publish("waterFlow1", String(waterFlow1));
+  MqttClient.publish(String("waterFlow1"), String(waterFlow1));
 
   // Water quantity 1, in L
-  Log.println("\t waterQty1: \t" + String(waterQty1) + " L");
-  MqttClient.publish("waterQty1", String(waterQty1));
+  Log.println("\t waterQty1: \t" + String(Configuration._waterQtyA) + " L");
+  MqttClient.publish(String("waterQty1"), String(Configuration._waterQtyA));
 
-  // flow metter 2, in L/min
-  Log.println("\t waterFlow2: \t" + String(waterFlow2) + " L/Min");
-  MqttClient.publish("waterFlow2", String(waterFlow2));
+  // // flow metter 2, in L/min
+  // Log.println("\t waterFlow2: \t" + String(waterFlow2) + " L/Min");
+  // MqttClient.publish("waterFlow2", String(waterFlow2));
 
-  // Water quantity 2, in L
-  Log.println("\t waterQty2: \t" + String(waterQty2) + " L");
-  MqttClient.publish("waterQty2", String(waterQty2));
+  // // Water quantity 2, in L
+  // Log.println("\t waterQty2: \t" + String(Configuration._waterQtyB) + " L");
+  // MqttClient.publish("waterQty2", String(Configuration._waterQtyB));
 
   // Water level, in cm
-  Log.println("\t waterLevel: \t" + String(waterLevel) + " cm");
-  MqttClient.publish("waterLevel", String(waterLevel));
+  Log.println("\t waterLevel: \t" + String(Configuration._waterLevel) + " cm");
+  MqttClient.publish(String("waterLevel"), String(Configuration._waterLevel));
 
   // Restart ticker
   tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
@@ -275,13 +266,11 @@ void setup()
   // Attach interrupt for compute frequency
   flow1IntCnt = flow2IntCnt = 0;
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
-  attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
+  // attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
 
   /* Read configuration from SPIFFS */
   Configuration.setup();
   // Configuration.restoreDefault();
-  waterQty1 = Configuration._waterQtyA;
-  waterQty2 = Configuration._waterQtyB;
   rollerShutter.setTimeout(Configuration._rollerShutterTimeout);
   valve.setTimeout(Configuration._solenoidValveTimeout);
   valve.setMaxWaterQuantity(Configuration._solenoidValveMaxWaterQty);

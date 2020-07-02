@@ -9,7 +9,6 @@
 #include "SolenoidValve.h"
 
 WiFiClient espClient;
-extern float waterQty1, waterQty2;   // in l
 extern RollerShutter rollerShutter;
 extern SolenoidValve valve;
 
@@ -44,6 +43,7 @@ void Mqtt::handle()
 void Mqtt::publish(String topic, String body)
 {
   clientMqtt.publish(String(Configuration._hostname + '/' + topic).c_str(), String(body).c_str());
+  delay(5);
 }
 
 void Mqtt::log(String level, String str)
@@ -77,8 +77,6 @@ void Mqtt::reconnect()
         publish(String("ip"), WiFi.localIP().toString());
         publish(String("timeSendData"), String(Configuration._timeSendData));
         publish(String("timeSaveData"), String(Configuration._timeSaveData));
-        publish(String("waterQty1"), String(Configuration._waterQtyA));
-        publish(String("waterQty2"), String(Configuration._waterQtyB));
         publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
         publish(String("rollerShutter"), String("stop"));
         publish(String("solenoidValve"), String("close"));
@@ -154,7 +152,6 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Log.println("Set waterQty1 to: " + String(qty) + " L");
     Configuration._waterQtyA = qty;
     Configuration.saveConfig();
-    waterQty1 = qty;
     publish(String("waterQty1"), String(Configuration._waterQtyA));
   }
   else if (topicStr == String("waterQty2"))
@@ -163,7 +160,6 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Log.println("Set waterQty2 to: " + String(qty) + " L");
     Configuration._waterQtyB = qty;
     Configuration.saveConfig();
-    waterQty2 = qty;
     publish(String("waterQty2"), String(Configuration._waterQtyB));
   }
   else if (topicStr == String("rollerShutterTimeout"))

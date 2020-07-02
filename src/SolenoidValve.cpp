@@ -1,10 +1,9 @@
 #include "SolenoidValve.h"
+#include "JsonConfiguration.h"
 #include "Logger.h"
 #include "Mqtt.h"
 
 
-extern float waterQty1, waterQty2;   // in l
-extern float waterLevel; // in cm
 
 /********************************************************/
 /******************** Public Method *********************/
@@ -31,7 +30,7 @@ void SolenoidValve::handle()
 {
     if (_isOpen == true && _waterQuantityMax != 0)
     {
-        if ((waterQty1 - _waterQuantity) >= _waterQuantityMax)
+        if ((Configuration._waterQtyA - _waterQuantity) >= _waterQuantityMax)
         {
             close();
         }
@@ -61,7 +60,7 @@ void SolenoidValve::open()
 
     _tickTimeout.detach();
     _isOpen = true;
-    _waterQuantity = waterQty1;
+    _waterQuantity = Configuration._waterQtyA;
 
     if (_timeout != 0)
         _tickTimeout.once(_timeout, +[](SolenoidValve *inst) { inst->close(); }, this);
