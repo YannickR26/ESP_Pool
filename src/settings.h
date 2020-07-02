@@ -16,8 +16,8 @@
 // Flow Meter (YF-B10)
 #define FLOW_1_PIN 14
 #define FLOW_2_PIN 12
-#define FLOW_COEF_A 6               // A=1/6 in reality
-#define FLOW_COEF_B (float)(8 / 6)  // B=8/6 in reality
+#define FLOW_COEF_A (float)(1.f / 6.f)  // A=1/6 in reality
+#define FLOW_COEF_B (float)(8.f / 6.f)  // B=8/6 in reality
 
 // Temperature :
 // DS18B20
