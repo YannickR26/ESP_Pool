@@ -3,8 +3,6 @@
 #include "Logger.h"
 #include "Mqtt.h"
 
-
-
 /********************************************************/
 /******************** Public Method *********************/
 /********************************************************/
@@ -20,6 +18,7 @@ SolenoidValve::SolenoidValve(uint8_t pinPositivePower, uint8_t pinNegativePower)
     _timeout = 0;
     _waterQuantity = 0;
     _waterQuantityMax = 0;
+    _waterLevelMax = 0;
 }
 
 SolenoidValve::~SolenoidValve()
@@ -28,11 +27,21 @@ SolenoidValve::~SolenoidValve()
 
 void SolenoidValve::handle()
 {
-    if (_isOpen == true && _waterQuantityMax != 0)
+    if (_isOpen == true)
     {
-        if ((Configuration._waterQtyA - _waterQuantity) >= _waterQuantityMax)
+        if (_waterQuantityMax != 0)
         {
-            close();
+            if ((Configuration._waterQtyA - _waterQuantity) >= _waterQuantityMax)
+            {
+                close();
+            }
+        }
+        if (_waterLevelMax != 0)
+        {
+            if (Configuration._waterLevel >= _waterLevelMax)
+            {
+                close();
+            }
         }
     }
 }
@@ -45,6 +54,11 @@ void SolenoidValve::setTimeout(uint16_t timeInSeconds)
 void SolenoidValve::setMaxWaterQuantity(uint16_t waterQuantity)
 {
     _waterQuantityMax = waterQuantity;
+}
+
+void SolenoidValve::setMaxWaterLevel(float waterLevel)
+{
+    _waterLevelMax = waterLevel;
 }
 
 void SolenoidValve::open()

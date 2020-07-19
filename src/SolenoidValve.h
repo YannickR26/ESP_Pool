@@ -13,6 +13,7 @@ public:
 
     void setTimeout(uint16_t timeInSeconds);            // set to 0 for infinite
     void setMaxWaterQuantity(uint16_t waterQuantity);   // set to 0 for no max quantity of water
+    void setMaxWaterLevel(float waterLevel);            // set to 0 for no max level of water
     void open();
     void close();
 
@@ -23,4 +24,5 @@ private:
     uint16_t _timeout;
     Ticker _tickTimeout;
     uint16_t _waterQuantityMax, _waterQuantity;
+    float _waterLevelMax;
 };

@@ -25,13 +25,14 @@ public:
 	uint16_t _mqttPortServer;
 	uint16_t _timeSaveData;
 	uint16_t _timeSendData;
-	uint32_t _waterQtyA, _waterQtyB;
+	float _waterQtyA, _waterQtyB;
 	float _waterLevel, _waterTemp;
 	float _intTemp, _extTemp;
 	float _intHumidity, _extHumidity;
 	uint16_t _rollerShutterTimeout;
 	uint16_t _solenoidValveTimeout;
 	uint16_t _solenoidValveMaxWaterQty;
+	float _solenoidValveMaxWaterLevel;
 
 private:
 };

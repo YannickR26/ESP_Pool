@@ -45,6 +45,7 @@ void JsonConfiguration::setup(void)
   Log.println(String("    rollerShutterTimeout: ") + String(_rollerShutterTimeout));
   Log.println(String("    solenoidValveTimeout: ") + String(_solenoidValveTimeout));
   Log.println(String("    solenoidValveWaterQty: ") + String(_solenoidValveMaxWaterQty));
+  Log.println(String("    solenoidValveWaterLevel: ") + String(_solenoidValveMaxWaterLevel));
 }
 
 bool JsonConfiguration::readConfig()
@@ -113,6 +114,7 @@ void JsonConfiguration::restoreDefault()
   _rollerShutterTimeout = DEFAULT_ROLLER_SHUTTER_TIMEOUT;
   _solenoidValveTimeout = DEFAULT_SOLENOID_VALVE_TIMEOUT;
   _solenoidValveMaxWaterQty = DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER;
+  _solenoidValveMaxWaterLevel = DEFAULT_SOLENOID_VALVE_MAX_LEVEL_WATER;
 
   saveConfig();
   Log.println("configuration restored.");
@@ -137,6 +139,7 @@ void JsonConfiguration::encodeToJson(JsonDocument &_json)
   _json["rollerShutterTimeout"] = _rollerShutterTimeout;
   _json["solenoidValveTimeout"] = _solenoidValveTimeout;
   _json["solenoidValveMaxQtyWater"] = _solenoidValveMaxWaterQty;
+  _json["solenoidValveMaxLevelWater"] = _solenoidValveMaxWaterLevel;
 }
 
 uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
@@ -163,8 +166,8 @@ uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
   _mqttPortServer = doc["mqttPortServer"].as<uint16_t>();
   _timeSaveData = doc["timeSaveData"].as<uint16_t>();
   _timeSendData = doc["timeSendData"].as<uint16_t>();
-  _waterQtyA = doc["waterQtyA"].as<uint32_t>();
-  _waterQtyB = doc["waterQtyB"].as<uint32_t>();  
+  _waterQtyA = doc["waterQtyA"].as<float>();
+  _waterQtyB = doc["waterQtyB"].as<float>();  
   _waterLevel = doc["waterLevel"].as<float>();  
   _waterTemp = doc["waterTemp"].as<float>();  
   _intTemp = doc["intTemp"].as<float>();  
@@ -174,6 +177,7 @@ uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
   _rollerShutterTimeout = doc["rollerShutterTimeout"].as<uint16_t>();
   _solenoidValveTimeout = doc["solenoidValveTimeout"].as<uint16_t>();
   _solenoidValveMaxWaterQty = doc["solenoidValveMaxQtyWater"].as<uint16_t>();
+  _solenoidValveMaxWaterLevel = doc["solenoidValveMaxLevelWater"].as<float>();
 
   return 0;
 }
