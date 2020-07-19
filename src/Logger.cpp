@@ -148,8 +148,8 @@ void Logger::handleTelnetClient()
       telnetClient.read();
     }
     println("=====================================================");
-    println(String("ESP_Power_Monitoring - Build: ") + F(__DATE__) + " " + F(__TIME__));
-    println(String("ESP_Power_Monitoring - Version: ") + String(VERSION));
+    println(String("ESP_Pool - Build: ") + F(__DATE__) + " " + F(__TIME__));
+    println(String("ESP_Pool - Version: ") + String(VERSION));
     println("=====================================================");
     println();
   }
