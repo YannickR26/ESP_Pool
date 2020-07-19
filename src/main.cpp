@@ -22,13 +22,13 @@
 SensorDS18B20 ds18b20(DS18B20_PIN);
 SensorAM2301 am2301_int(DHT_1_PIN), am2301_ext(DHT_2_PIN);
 SolenoidValve valve(RELAY_1_PIN, RELAY_2_PIN);
-RollerShutter rollerShutter(RELAY_3_PIN, RELAY_4_PIN);
+RollerShutter rollerShutter(RELAY_4_PIN, RELAY_3_PIN);
 
 static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
 static uint32_t flow1IntCnt, flow2IntCnt;
 
 // Value of flow
-static float waterFlow1, waterFlow2; // in l/min
+static float waterFlow1; //, waterFlow2; // in l/min
 
 /*****************/
 /*** INTERRUPT ***/
@@ -100,16 +100,16 @@ void computeFlowMetter()
   // Compute flow metter 1
   waterFlow1 = 0;
   if (flow1IntCnt > 0)
-    waterFlow1 = (ratio * flow1IntCnt) * FLOW_COEF_A + FLOW_COEF_B;
+    waterFlow1 = FLOW_COEF_A * (ratio * flow1IntCnt) + FLOW_COEF_B;
   flow1IntCnt = 0;
 
   // Compute quantity of water (integral)
-  Configuration._waterQtyA += waterFlow1 / (60.0 * ratio);
+  Configuration._waterQtyA += waterFlow1 / (60.f * ratio);
 
   // Compute flow metter 2
   // waterFlow2 = 0;
   // if (flow2IntCnt > 0)
-  //   waterFlow2 = (ratio * flow2IntCnt) / FLOW_COEF_A + FLOW_COEF_B;
+  //   waterFlow2 = FLOW_COEF_A * (ratio * flow2IntCnt) + FLOW_COEF_B;
   // flow2IntCnt = 0;
 
   // // Compute quantity of water (integral)
@@ -118,17 +118,18 @@ void computeFlowMetter()
   // Save current timestamp
   oldTime = currentTime;
 
-  // Log.println("flow 1 : " + String(waterFlow1) + " L/min");
-  // Log.println("flow 2 : " + String(waterFlow2) + " L/min");
+  // Log.println("flow1IntCnt : " + String(flow1IntCnt) + " Hz");
+  // Log.println("waterFlow1 : " + String(waterFlow1) + " L/min");
   // Log.println("waterQty 1 : " + String(waterQty1) + " L");
   // Log.println("waterQty 2 : " + String(waterQty2) + " L");
+  
   
   // Compute Water level, in cm
   uint16_t adc = analogRead(WATER_LEVEL_PIN);
   float valueInCm = WATER_LEVEL_COEF_A * adc + WATER_LEVEL_COEF_B;
   if (valueInCm < 0)
     valueInCm = 0;
-  Configuration._waterLevel = (Configuration._waterLevel * 59 + valueInCm * 1) / 60;
+  Configuration._waterLevel = (Configuration._waterLevel * 29 + valueInCm * 1) / 30;
 
   // Enable the interrupt
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
@@ -202,7 +203,7 @@ void sendData()
 void wifiSetup()
 {
   WiFiManager wm;
-  wm.setDebugOutput(false);
+  // wm.setDebugOutput(false);
   // wm.resetSettings();
 
   // WiFiManagerParameter
@@ -274,6 +275,7 @@ void setup()
   rollerShutter.setTimeout(Configuration._rollerShutterTimeout);
   valve.setTimeout(Configuration._solenoidValveTimeout);
   valve.setMaxWaterQuantity(Configuration._solenoidValveMaxWaterQty);
+  valve.setMaxWaterLevel(Configuration._solenoidValveMaxWaterLevel);
 
   // Configure and run WifiManager
   wifiSetup();

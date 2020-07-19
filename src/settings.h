@@ -7,17 +7,18 @@
 #define DEFAULT_MQTTIPSERVER "192.168.1.201"
 #define DEFAULT_MQTTPORTSERVER 1883
 
-#define DEFAULT_SAVE_DATA_INTERVAL_SEC  (1 * 3600)  // Update time from NTP server and save data every 1 hours
-#define DEFAULT_SEND_DATA_INTERVAL_SEC  5           // Log data every 5 secondes
-#define DEFAULT_ROLLER_SHUTTER_TIMEOUT  60          // 1 minutes timeout
-#define DEFAULT_SOLENOID_VALVE_TIMEOUT  30*60       // 30 minutes timeout
-#define DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER  500   // 500 L max
+#define DEFAULT_SAVE_DATA_INTERVAL_SEC  (1 * 3600)      // Update time from NTP server and save data every 1 hours
+#define DEFAULT_SEND_DATA_INTERVAL_SEC  15              // Log data every 5 secondes
+#define DEFAULT_ROLLER_SHUTTER_TIMEOUT  60              // 1 minutes timeout
+#define DEFAULT_SOLENOID_VALVE_TIMEOUT  (5 * 60)         // 5 minutes timeout
+#define DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER  200       // 200 L max
+#define DEFAULT_SOLENOID_VALVE_MAX_LEVEL_WATER  10.f    // 10 cm max
 
 // Flow Meter (YF-B10)
 #define FLOW_1_PIN 14
 #define FLOW_2_PIN 12
-#define FLOW_COEF_A (float)(1.f / 6.f)  // A=1/6 in reality
-#define FLOW_COEF_B (float)(8.f / 6.f)  // B=8/6 in reality
+#define FLOW_COEF_A  1.f / (6.f * 4.5f)  // A=1/6 in reality
+#define FLOW_COEF_B  8.f / 6.f  // B=8/6 in reality
 
 // Temperature :
 // DS18B20

@@ -82,6 +82,7 @@ void Mqtt::reconnect()
         publish(String("solenoidValve"), String("close"));
         publish(String("solenoidValveTimeout"), String(Configuration._solenoidValveTimeout));
         publish(String("solenoidValveMaxWaterQty"), String(Configuration._solenoidValveMaxWaterQty));
+        publish(String("solenoidValveMaxWaterLevel"), String(Configuration._solenoidValveMaxWaterLevel));
         // ... and resubscribe
         clientMqtt.subscribe(String(Configuration._hostname + "/set/#").c_str(), 1);
       }
@@ -206,6 +207,15 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Configuration._solenoidValveMaxWaterQty = maxQty;
     Configuration.saveConfig();
     publish(String("solenoidValveMaxWaterQty"), String(Configuration._solenoidValveMaxWaterQty));
+  }
+  else if (topicStr == String("solenoidValveMaxWaterLevel"))
+  {
+    float maxQty = data.toFloat();
+    Log.println("Set solenoidValveMaxWaterLevel to: " + String(maxQty) + " cm");
+    valve.setMaxWaterLevel(maxQty);
+    Configuration._solenoidValveMaxWaterLevel = maxQty;
+    Configuration.saveConfig();
+    publish(String("solenoidValveMaxWaterLevel"), String(Configuration._solenoidValveMaxWaterLevel));
   }
   else
   {
