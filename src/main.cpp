@@ -122,8 +122,7 @@ void computeFlowMetter()
   // Log.println("waterFlow1 : " + String(waterFlow1) + " L/min");
   // Log.println("waterQty 1 : " + String(waterQty1) + " L");
   // Log.println("waterQty 2 : " + String(waterQty2) + " L");
-  
-  
+
   // Compute Water level, in cm
   uint16_t adc = analogRead(WATER_LEVEL_PIN);
   float valueInCm = WATER_LEVEL_COEF_A * adc + WATER_LEVEL_COEF_B;
@@ -232,6 +231,9 @@ void wifiSetup()
 
   Log.println(String("Connected to ") + WiFi.SSID());
   Log.println(String("IP address: ") + WiFi.localIP().toString());
+
+  // Disable sleep mode
+  WiFi.setSleep(false);
 
   /* Get configuration from WifiManager */
   Configuration._hostname = custom_mqtt_hostname.getValue();
@@ -345,10 +347,28 @@ void setup()
 /************/
 void loop()
 {
+  static uint8_t noWifiConnection = 0;
+
   MqttClient.handle();
   Log.handle();
   HTTPServer.handle();
   valve.handle();
+
+  if (!WiFi.isConnected())
+  {
+    if (noWifiConnection >= 10)
+    {
+      ESP.restart();
+    }
+    else
+    {
+      noWifiConnection++;
+    }
+  }
+  else
+  {
+    noWifiConnection = 0;
+  }
 
 #ifdef ENABLE_OTA
   ArduinoOTA.handle();
