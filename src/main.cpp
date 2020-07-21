@@ -144,33 +144,45 @@ void sendData()
 
   // Read Water Temp, in °C
   float tmp = ds18b20.readTemp();
-  Configuration._waterTemp = (Configuration._waterTemp + tmp) / 2;
-  Log.println("\t waterTemp1: \t" + String(Configuration._waterTemp) + " °C");
-  MqttClient.publish(String("waterTemp1"), String(Configuration._waterTemp));
+  if (tmp != DEVICE_DISCONNECTED_C)
+  {
+    Configuration._waterTemp = (Configuration._waterTemp + tmp) / 2;
+    Log.println("\t waterTemp1: \t" + String(Configuration._waterTemp) + " °C");
+    MqttClient.publish(String("waterTemp1"), String(Configuration._waterTemp));
+  }
 
   // Read Internal Temp, in °C
   tmp = am2301_int.readTemp();
-  Configuration._intTemp = (Configuration._intTemp + tmp) / 2;
-  Log.println("\t intTemp: \t" + String(Configuration._intTemp) + " °C" + " (" + String(am2301_int.getStatus()) + ")");
-  MqttClient.publish(String("intTemp"), String(Configuration._intTemp));
+  const char *state;
+  state = am2301_int.getStatus();
+  if (strcmp("OK", state) == 0)
+  {
+    Configuration._intTemp = (Configuration._intTemp + tmp) / 2;
+    Log.println("\t intTemp: \t" + String(Configuration._intTemp) + " °C" + " (" + String(state) + ")");
+    MqttClient.publish(String("intTemp"), String(Configuration._intTemp));
 
-  // Read Internal Humidity, in %
-  tmp = am2301_int.readHumidity();
-  Configuration._intHumidity = (Configuration._intHumidity + tmp) / 2;
-  Log.println("\t intHumidity: \t" + String(Configuration._intHumidity) + " %");
-  MqttClient.publish(String("intHumidity"), String(Configuration._intHumidity));
+    // Read Internal Humidity, in %
+    tmp = am2301_int.readHumidity();
+    Configuration._intHumidity = (Configuration._intHumidity + tmp) / 2;
+    Log.println("\t intHumidity: \t" + String(Configuration._intHumidity) + " %");
+    MqttClient.publish(String("intHumidity"), String(Configuration._intHumidity));
+  }
 
   // Read External Temp, in °C
   tmp = am2301_ext.readTemp();
-  Configuration._extTemp = (Configuration._extTemp + tmp) / 2;
-  Log.println("\t extTemp: \t" + String(Configuration._extTemp) + " °C" + " (" + String(am2301_ext.getStatus()) + ")");
-  MqttClient.publish(String("extTemp"), String(Configuration._extTemp));
+  state = am2301_ext.getStatus();
+  if (strcmp("OK", state) == 0)
+  {
+    Configuration._extTemp = (Configuration._extTemp + tmp) / 2;
+    Log.println("\t extTemp: \t" + String(Configuration._extTemp) + " °C" + " (" + String(state) + ")");
+    MqttClient.publish(String("extTemp"), String(Configuration._extTemp));
 
-  // Read External Humidity, in %
-  tmp = am2301_ext.readHumidity();
-  Configuration._extHumidity = (Configuration._extHumidity + tmp) / 2;
-  Log.println("\t extHumidity: \t" + String(Configuration._extHumidity) + " %");
-  MqttClient.publish(String("extHumidity"), String(Configuration._extHumidity));
+    // Read External Humidity, in %
+    tmp = am2301_ext.readHumidity();
+    Configuration._extHumidity = (Configuration._extHumidity + tmp) / 2;
+    Log.println("\t extHumidity: \t" + String(Configuration._extHumidity) + " %");
+    MqttClient.publish(String("extHumidity"), String(Configuration._extHumidity));
+  }
 
   // flow metter 1, in L/min
   Log.println("\t waterFlow1: \t" + String(waterFlow1) + " L/Min");
