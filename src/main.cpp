@@ -341,13 +341,12 @@ void setup()
 
   // Create ticker for update NTP time and save data
   updateTimeAndSaveData();
-  if (Configuration._timeSaveData == 0)
-    Configuration._timeSaveData = 1;
-  tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
+  if (Configuration._timeSaveData > 0)
+    tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
 
   // Create ticker for send data to MQTT
   if (Configuration._timeSendData == 0)
-    Configuration._timeSendData = 1;
+    Configuration._timeSendData = 10;
   tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 
   // Create ticker for compute Flow Metter, must be each 1 seconds
