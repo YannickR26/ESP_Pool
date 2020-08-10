@@ -11,6 +11,7 @@
 #include "SensorAM2301.h"
 #include "RollerShutter.h"
 #include "SolenoidValve.h"
+#include "SimpleRelay.h"
 
 // #define ENABLE_OTA    // If defined, enable Arduino OTA code.
 
@@ -23,6 +24,8 @@ SensorDS18B20 ds18b20(DS18B20_PIN);
 SensorAM2301 am2301_int(DHT_1_PIN), am2301_ext(DHT_2_PIN);
 SolenoidValve valve(RELAY_1_PIN, RELAY_2_PIN);
 RollerShutter rollerShutter(RELAY_4_PIN, RELAY_3_PIN);
+SimpleRelay pump(RELAY_5_PIN, "pump");
+SimpleRelay lamp(RELAY_5_PIN, "lamp");
 
 static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
 static uint32_t flow1IntCnt, flow2IntCnt;
@@ -290,6 +293,8 @@ void setup()
   valve.setTimeout(Configuration._solenoidValveTimeout);
   valve.setMaxWaterQuantity(Configuration._solenoidValveMaxWaterQty);
   valve.setMaxWaterLevel(Configuration._solenoidValveMaxWaterLevel);
+  pump.setTimeout(Configuration._pumpTimeout);
+  lamp.setTimeout(Configuration._lampTimeout);
 
   // Configure and run WifiManager
   wifiSetup();

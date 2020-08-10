@@ -28,10 +28,12 @@
 #define DHT_2_PIN 27
 
 // Relay
-#define RELAY_1_PIN 23
-#define RELAY_2_PIN 22
-#define RELAY_3_PIN 19
-#define RELAY_4_PIN 18
+#define RELAY_1_PIN 17
+#define RELAY_2_PIN 21
+#define RELAY_3_PIN 23
+#define RELAY_4_PIN 22
+#define RELAY_5_PIN 19
+#define RELAY_6_PIN 18
 
 // Water level
 #define WATER_LEVEL_PIN 36

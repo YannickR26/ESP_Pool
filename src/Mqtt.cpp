@@ -7,10 +7,12 @@
 #include "Logger.h"
 #include "RollerShutter.h"
 #include "SolenoidValve.h"
+#include "SimpleRelay.h"
 
 WiFiClient espClient;
 extern RollerShutter rollerShutter;
 extern SolenoidValve valve;
+extern SimpleRelay pump, lamp;
 
 /********************************************************/
 /******************** Public Method *********************/
@@ -85,6 +87,8 @@ void Mqtt::reconnect()
         publish(String("solenoidValveTimeout"), String(Configuration._solenoidValveTimeout));
         publish(String("solenoidValveMaxWaterQty"), String(Configuration._solenoidValveMaxWaterQty));
         publish(String("solenoidValveMaxWaterLevel"), String(Configuration._solenoidValveMaxWaterLevel));
+        publish(String("pumpTimeout"), String(Configuration._pumpTimeout));
+        publish(String("lampTimeout"), String(Configuration._lampTimeout));
         // ... and resubscribe
         clientMqtt.subscribe(String(Configuration._hostname + "/set/#").c_str(), 1);
       }
@@ -218,6 +222,32 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Configuration._solenoidValveMaxWaterLevel = maxQty;
     Configuration.saveConfig();
     publish(String("solenoidValveMaxWaterLevel"), String(Configuration._solenoidValveMaxWaterLevel));
+  }
+  else if (topicStr == String("pump"))
+  {
+    int state = data.toInt();
+    pump.setState(state);
+  }
+  else if (topicStr == String("pumpTimeout"))
+  {
+    int timeout = data.toInt();
+    Log.println("Set pumpTimeout to: " + String(timeout) + " s");
+    Configuration._pumpTimeout = timeout;
+    Configuration.saveConfig();
+    publish(String("pumpTimeout"), String(Configuration._pumpTimeout));
+  }
+  else if (topicStr == String("lamp"))
+  {
+    int state = data.toInt();
+    lamp.setState(state);
+  }
+  else if (topicStr == String("lampTimeout"))
+  {
+    int timeout = data.toInt();
+    Log.println("Set lampTimeout to: " + String(timeout) + " s");
+    Configuration._lampTimeout = timeout;
+    Configuration.saveConfig();
+    publish(String("lampTimeout"), String(Configuration._lampTimeout));
   }
   else
   {
