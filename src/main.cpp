@@ -21,7 +21,7 @@
 #endif
 
 SensorDS18B20 ds18b20(DS18B20_PIN);
-SensorAM2301 am2301_int(DHT_1_PIN), am2301_ext(DHT_2_PIN);
+SensorAM2301 am2301_ext(DHT_1_PIN), am2301_int(DHT_2_PIN);
 SolenoidValve valve(RELAY_1_PIN, RELAY_2_PIN);
 RollerShutter rollerShutter(RELAY_3_PIN, RELAY_4_PIN);
 SimpleRelay pump(RELAY_5_PIN, "pump");
@@ -149,6 +149,7 @@ void sendData()
   float tmp = ds18b20.readTemp();
   if (tmp != DEVICE_DISCONNECTED_C)
   {
+    tmp += 0.5f;
     Configuration._waterTemp = (Configuration._waterTemp + tmp) / 2;
     Log.println("\t waterTemp1: \t" + String(Configuration._waterTemp) + " °C");
     MqttClient.publish(String("waterTemp1"), String(Configuration._waterTemp));
