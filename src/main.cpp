@@ -23,7 +23,7 @@
 SensorDS18B20 ds18b20(DS18B20_PIN);
 SensorAM2301 am2301_int(DHT_1_PIN), am2301_ext(DHT_2_PIN);
 SolenoidValve valve(RELAY_1_PIN, RELAY_2_PIN);
-RollerShutter rollerShutter(RELAY_4_PIN, RELAY_3_PIN);
+RollerShutter rollerShutter(RELAY_3_PIN, RELAY_4_PIN);
 SimpleRelay pump(RELAY_5_PIN, "pump");
 SimpleRelay lamp(RELAY_5_PIN, "lamp");
 
@@ -317,7 +317,7 @@ void setup()
   // Hostname defaults to esp8266-[ChipID]
   ArduinoOTA.setHostname(Configuration._hostname.c_str());
 
-  ArduinoOTA.onStart([&]() {
+  ArduinoOTA.onStart([]() {
     Log.println("Arduino OTA: Start updating");
   });
   ArduinoOTA.onEnd([]() {
