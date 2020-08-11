@@ -15,8 +15,7 @@
 #define DEFAULT_SOLENOID_VALVE_MAX_LEVEL_WATER  10.f    // in cm, 10 cm max
 
 // Flow Meter (YF-B10)
-#define FLOW_1_PIN 14
-#define FLOW_2_PIN 12
+#define FLOW_PIN 14
 #define FLOW_COEF_A  1.f / (6.f * 4.5f)
 #define FLOW_COEF_B  8.f / 6.f
 
@@ -24,24 +23,10 @@
 // DS18B20
 #define DS18B20_PIN 16
 // AM2301
-#define DHT_1_PIN 25
-#define DHT_2_PIN 27
-
-// Relay
-#define RELAY_1_PIN 17
-#define RELAY_2_PIN 21
-#define RELAY_3_PIN 23
-#define RELAY_4_PIN 22
-#define RELAY_5_PIN 19
-#define RELAY_6_PIN 18
-
-// Water level
-#define WATER_LEVEL_PIN 36
-#define WATER_LEVEL_COEF_A 0.0048
-#define WATER_LEVEL_COEF_B -8.867
+#define DHT_PIN 25
 
 // LED
-#define LED_PIN 20           // LED_BUILTIN
+#define LED_PIN LED_BUILTIN
 #define LED_TIME_NOMQTT 0.1f // in seconds
 #define LED_TIME_WORK 0.5f   // in seconds
 

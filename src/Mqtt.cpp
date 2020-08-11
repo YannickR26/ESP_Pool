@@ -2,17 +2,11 @@
 
 #include "JsonConfiguration.h"
 
-#include <WiFi.h>
+#include <ESP8266WiFi.h>
 #include <WiFiManager.h>
 #include "Logger.h"
-#include "RollerShutter.h"
-#include "SolenoidValve.h"
-#include "SimpleRelay.h"
 
 WiFiClient espClient;
-extern RollerShutter rollerShutter;
-extern SolenoidValve valve;
-extern SimpleRelay pump, lamp;
 
 /********************************************************/
 /******************** Public Method *********************/
@@ -81,14 +75,6 @@ void Mqtt::reconnect()
         publish(String("ip"), WiFi.localIP().toString());
         publish(String("timeSendData"), String(Configuration._timeSendData));
         publish(String("timeSaveData"), String(Configuration._timeSaveData));
-        publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
-        publish(String("rollerShutter"), String("stop"));
-        publish(String("solenoidValve"), String("close"));
-        publish(String("solenoidValveTimeout"), String(Configuration._solenoidValveTimeout));
-        publish(String("solenoidValveMaxWaterQty"), String(Configuration._solenoidValveMaxWaterQty));
-        publish(String("solenoidValveMaxWaterLevel"), String(Configuration._solenoidValveMaxWaterLevel));
-        publish(String("pumpTimeout"), String(Configuration._pumpTimeout));
-        publish(String("lampTimeout"), String(Configuration._lampTimeout));
         // ... and resubscribe
         clientMqtt.subscribe(String(Configuration._hostname + "/set/#").c_str(), 1);
       }
@@ -153,101 +139,13 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     wifiManager.resetSettings();
     ESP.restart();
   }
-  else if (topicStr == String("waterQty1"))
+  else if (topicStr == String("waterQty"))
   {
     int qty = data.toInt();
-    Log.println("Set waterQty1 to: " + String(qty) + " L");
-    Configuration._waterQtyA = qty;
+    Log.println("Set waterQty to: " + String(qty) + " L");
+    Configuration._waterQty = qty;
     Configuration.saveConfig();
-    publish(String("waterQty1"), String(Configuration._waterQtyA));
-  }
-  else if (topicStr == String("waterQty2"))
-  {
-    int qty = data.toInt();
-    Log.println("Set waterQty2 to: " + String(qty) + " L");
-    Configuration._waterQtyB = qty;
-    Configuration.saveConfig();
-    publish(String("waterQty2"), String(Configuration._waterQtyB));
-  }
-  else if (topicStr == String("rollerShutterTimeout"))
-  {
-    int timeout = data.toInt();
-    Log.println("Set rollerShutterTimeout to: " + String(timeout) + " s");
-    rollerShutter.setTimeout(timeout);
-    Configuration._rollerShutterTimeout = timeout;
-    Configuration.saveConfig();
-    publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
-  }
-  else if (topicStr == String("rollerShutter"))
-  {
-    Log.println("Set rollerShutter to: " + data);
-    if (data == String("open"))
-      rollerShutter.open();
-    else if (data == String("stop"))
-      rollerShutter.stop();
-    else if (data == String("close"))
-      rollerShutter.close();
-  }
-  else if (topicStr == String("solenoidValve"))
-  {
-    Log.println("Set solenoidValve to: " + data);
-    if (data == String("open"))
-      valve.open();
-    else if (data == String("close"))
-      valve.close();
-  }
-  else if (topicStr == String("solenoidValveTimeout"))
-  {
-    int timeout = data.toInt();
-    Log.println("Set solenoidValveTimeout to: " + String(timeout) + " s");
-    valve.setTimeout(timeout);
-    Configuration._solenoidValveTimeout = timeout;
-    Configuration.saveConfig();
-    publish(String("solenoidValveTimeout"), String(Configuration._solenoidValveTimeout));
-  }
-  else if (topicStr == String("solenoidValveMaxWaterQty"))
-  {
-    int maxQty = data.toInt();
-    Log.println("Set solenoidValveMaxWaterQty to: " + String(maxQty) + " L");
-    valve.setMaxWaterQuantity(maxQty);
-    Configuration._solenoidValveMaxWaterQty = maxQty;
-    Configuration.saveConfig();
-    publish(String("solenoidValveMaxWaterQty"), String(Configuration._solenoidValveMaxWaterQty));
-  }
-  else if (topicStr == String("solenoidValveMaxWaterLevel"))
-  {
-    float maxQty = data.toFloat();
-    Log.println("Set solenoidValveMaxWaterLevel to: " + String(maxQty) + " cm");
-    valve.setMaxWaterLevel(maxQty);
-    Configuration._solenoidValveMaxWaterLevel = maxQty;
-    Configuration.saveConfig();
-    publish(String("solenoidValveMaxWaterLevel"), String(Configuration._solenoidValveMaxWaterLevel));
-  }
-  else if (topicStr == String("pump"))
-  {
-    int state = data.toInt();
-    pump.setState(state);
-  }
-  else if (topicStr == String("pumpTimeout"))
-  {
-    int timeout = data.toInt();
-    Log.println("Set pumpTimeout to: " + String(timeout) + " s");
-    Configuration._pumpTimeout = timeout;
-    Configuration.saveConfig();
-    publish(String("pumpTimeout"), String(Configuration._pumpTimeout));
-  }
-  else if (topicStr == String("lamp"))
-  {
-    int state = data.toInt();
-    lamp.setState(state);
-  }
-  else if (topicStr == String("lampTimeout"))
-  {
-    int timeout = data.toInt();
-    Log.println("Set lampTimeout to: " + String(timeout) + " s");
-    Configuration._lampTimeout = timeout;
-    Configuration.saveConfig();
-    publish(String("lampTimeout"), String(Configuration._lampTimeout));
+    publish(String("waterQty"), String(Configuration._waterQty));
   }
   else
   {

@@ -1,10 +1,9 @@
 #include <FS.h>
-#include <SPIFFS.h>
-#include <ESPmDNS.h>
+#include <LittleFS.h>
+#include <ESP8266mDNS.h>
 
 // You can update by 'curl -F "image=@firmware.bin" ESP_Monitoring.local/'
 
-#include "ESP32HTTPUpdateServer.h"
 #include "HttpServer.h"
 #include "Logger.h"
 
@@ -74,10 +73,10 @@ bool HttpServer::handleFileRead(String path)
   }
   String contentType = HTTPServer.getContentType(path);       // Get the MIME type
   String pathWithGz = path + ".gz";
-  if (SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)) {     // If the file exists, either as a compressed archive, or normal
-    if (SPIFFS.exists(pathWithGz))                            // If there's a compressed version available
+  if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) {     // If the file exists, either as a compressed archive, or normal
+    if (LittleFS.exists(pathWithGz))                            // If there's a compressed version available
       path += ".gz";                                          // Use the compressed verion
-    File file = SPIFFS.open(path, "r");                       // Open the file
+    File file = LittleFS.open(path, "r");                       // Open the file
     HTTPServer.webServer().streamFile(file, contentType);     // Send it to the client
     file.close();                                             // Close the file again
     Log.println(String("\tSent file: ") + path);
@@ -87,7 +86,7 @@ bool HttpServer::handleFileRead(String path)
   return false;
 }
 
-WebServer& HttpServer::webServer() 
+ESP8266WebServer& HttpServer::webServer() 
 {
   return _webServer;
 }

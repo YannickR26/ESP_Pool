@@ -1,7 +1,7 @@
 #pragma once
 
-#include <WebServer.h>
-#include "ESP32HTTPUpdateServer.h"
+#include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
 #include <ArduinoJson.h>
 
 #include "JsonConfiguration.h"
@@ -18,7 +18,7 @@ public:
   String getContentType(String filename);
   bool handleFileRead(String path);
 
-  WebServer &webServer();
+  ESP8266WebServer &webServer();
 
   void sendJson(const uint16_t code, JsonDocument &doc);
 
@@ -27,8 +27,8 @@ protected:
   static void set_config();
 
 private:
-  WebServer _webServer;
-  ESP32HTTPUpdateServer _httpUpdater;
+  ESP8266WebServer _webServer;
+  ESP8266HTTPUpdateServer _httpUpdater;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES)

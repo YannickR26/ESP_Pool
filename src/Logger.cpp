@@ -1,3 +1,4 @@
+#include <ESP8266WiFi.h>
 #include "Logger.h"
 #include "settings.h"
 #include "Mqtt.h"
