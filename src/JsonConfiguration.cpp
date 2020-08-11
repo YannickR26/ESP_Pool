@@ -21,14 +21,10 @@ void JsonConfiguration::setup(void)
   if (!LittleFS.begin())
   {
     Log.println("failed to initialize LittleFS, try to format...");
-    if (LittleFS.format())
+    LittleFS.format();
+    if (!LittleFS.begin())
     {
-      Log.println("failed to format !");
-    }
-    else
-    {
-      Log.println("Format success !");
-      LittleFS.begin();
+      Log.println("definitely failed to initialize LittleFS !");
     }
   }
 

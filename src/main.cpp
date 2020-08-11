@@ -273,10 +273,8 @@ void setup()
   Log.println("");
 #endif
 
-  // Create ticker for update NTP time and save data
+  // update NTP time and save data
   updateTimeAndSaveData();
-  if (Configuration._timeSaveData > 0)
-    tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
 
   // Create ticker for send data to MQTT
   if (Configuration._timeSendData == 0)
