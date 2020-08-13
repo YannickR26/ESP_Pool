@@ -56,17 +56,20 @@ void blinkLED()
 
 void updateTimeAndSaveData()
 {
-  Log.println("Update NTP");
+  time_t now = time(nullptr);
+  Log.print("Update NTP...");
 
   configTime(UTC_OFFSET * 3600, 0, NTP_SERVERS);
   delay(500);
-  while (!time(nullptr))
+  while (now < EPOCH_1_1_2019)
   {
-    Log.print("#");
-    delay(1000);
+    now = time(nullptr);
+    Log.print(".");
+    delay(500);
   }
 
-  Log.println("Save data");
+  Log.println(" Done !");
+  Log.println("Save data...");
   Configuration.saveConfig();
 
   // Restart ticker
@@ -120,22 +123,21 @@ void sendData()
     MqttClient.publish(String("waterTemp"), String(Configuration._waterTemp));
   }
 
-  // Read Internal Temp, in °C
-  tmp = am2301.readTemp();
-  const char *state;
-  state = am2301.getStatus();
-  if (strcmp("OK", state) == 0)
-  {
-    Configuration._temp = (Configuration._temp + tmp) / 2;
-    Log.println("\t temp: \t" + String(Configuration._temp) + " °C" + " (" + String(state) + ")");
-    MqttClient.publish(String("temp"), String(Configuration._temp));
+  // // Read Internal Temp, in °C
+  // tmp = am2301.readTemp();
+  // if (strcmp("OK", am2301.getStatus()) == 0)
+  // {
+  //   Configuration._temp = (Configuration._temp + tmp) / 2;
+  //   Log.println("\t temp: \t" + String(Configuration._temp) + " °C");
+  //   MqttClient.publish(String("temp"), String(Configuration._temp));
 
-    // Read Internal Humidity, in %
-    tmp = am2301.readHumidity();
-    Configuration._humidity = (Configuration._humidity + tmp) / 2;
-    Log.println("\t humidity: \t" + String(Configuration._humidity) + " %");
-    MqttClient.publish(String("humidity"), String(Configuration._humidity));
-  }
+  //   // Read Internal Humidity, in %
+  //   tmp = am2301.readHumidity();
+  //   Configuration._humidity = (Configuration._humidity + tmp) / 2;
+  //   Log.println("\t humidity: \t" + String(Configuration._humidity) + " %");
+  //   MqttClient.publish(String("humidity"), String(Configuration._humidity));
+  // }
+  
   // flow metter 1, in L/min
   Log.println("\t waterFlow: \t" + String(waterFlow) + " L/Min");
   MqttClient.publish(String("waterFlow"), String(waterFlow));
