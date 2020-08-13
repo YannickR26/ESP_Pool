@@ -1,6 +1,7 @@
 #include <FS.h>
 #include <LittleFS.h>
 #include <ESP8266mDNS.h>
+#include <WiFiManager.h>
 
 // You can update by 'curl -F "image=@firmware.bin" ESP_Monitoring.local/'
 
@@ -26,9 +27,29 @@ void HttpServer::setup(void)
   MDNS.addService("http", "tcp", 80);
 
   _webServer.on("/restart", [&]() {
+    _webServer.sendHeader("Access-Control-Allow-Origin", "*");
     _webServer.send(200, "text/plain", "ESP reboot now !");
     delay(200);
     ESP.restart();
+  });
+  
+  _webServer.on("/reset", [&]() {
+    _webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    _webServer.send(200, "text/plain", "Reset WifiManager configuration, restart now in AP mode...");
+    delay(200);
+    WiFiManager wifiManager;
+    wifiManager.resetSettings();
+    delay(200);
+    ESP.restart();
+  });
+
+  _webServer.on("/", [&]() {
+    _webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    _webServer.client().println(String(F("==============================")));
+    _webServer.client().println(String(F("---------- ESP_Pool ----------")));
+    _webServer.client().println(String(F("  Version: ")) + F(VERSION));
+    _webServer.client().println(String(F("  Build: ")) + F(__DATE__) + " " + F(__TIME__));
+    _webServer.client().println(String(F("==============================")));
   });
 
   _webServer.onNotFound([&]() {
@@ -37,7 +58,7 @@ void HttpServer::setup(void)
     }
   });
 
-  _httpUpdater.setup(&_webServer, String("/"));
+  _httpUpdater.setup(&_webServer, String("/update"));
   _webServer.begin();
 }
 

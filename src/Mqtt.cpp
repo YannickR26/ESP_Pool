@@ -39,7 +39,6 @@ void Mqtt::handle()
 void Mqtt::publish(String topic, String body)
 {
   clientMqtt.publish(String(Configuration._hostname + '/' + topic).c_str(), String(body).c_str());
-  delay(5);
 }
 
 void Mqtt::log(String level, String str)
