@@ -18,7 +18,7 @@
 SensorDS18B20 ds18b20(DS18B20_PIN);
 SensorAM2301 am2301(DHT_PIN);
 
-static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
+static Ticker tick_blinker, tick_flowMetter;
 static uint32_t flowIntCnt;
 
 // Value of flow
@@ -71,10 +71,6 @@ void updateTimeAndSaveData()
   Log.println(" Done !");
   Log.println("Save data...");
   Configuration.saveConfig();
-
-  // Restart ticker
-  if (Configuration._timeSaveData > 0)
-    tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
 }
 
 // Call every 1 second, so the counter is equal to frequency
@@ -109,8 +105,6 @@ void computeFlowMetter()
 
 void sendData()
 {
-  tick_sendDataMqtt.detach();
-
   Log.println();
   Log.println("Send data to MQTT :");
 
@@ -124,19 +118,19 @@ void sendData()
   }
 
   // // Read Internal Temp, in °C
-  // tmp = am2301.readTemp();
-  // if (strcmp("OK", am2301.getStatus()) == 0)
-  // {
-  //   Configuration._temp = (Configuration._temp + tmp) / 2;
-  //   Log.println("\t temp: \t" + String(Configuration._temp) + " °C");
-  //   MqttClient.publish(String("temp"), String(Configuration._temp));
+  tmp = am2301.readTemp();
+  if (strcmp("OK", am2301.getStatus()) == 0)
+  {
+    Configuration._temp = (Configuration._temp + tmp) / 2;
+    Log.println("\t temp: \t" + String(Configuration._temp) + " °C");
+    MqttClient.publish(String("temp"), String(Configuration._temp));
 
-  //   // Read Internal Humidity, in %
-  //   tmp = am2301.readHumidity();
-  //   Configuration._humidity = (Configuration._humidity + tmp) / 2;
-  //   Log.println("\t humidity: \t" + String(Configuration._humidity) + " %");
-  //   MqttClient.publish(String("humidity"), String(Configuration._humidity));
-  // }
+    // Read Internal Humidity, in %
+    tmp = am2301.readHumidity();
+    Configuration._humidity = (Configuration._humidity + tmp) / 2;
+    Log.println("\t humidity: \t" + String(Configuration._humidity) + " %");
+    MqttClient.publish(String("humidity"), String(Configuration._humidity));
+  }
   
   // flow metter 1, in L/min
   Log.println("\t waterFlow: \t" + String(waterFlow) + " L/Min");
@@ -145,9 +139,6 @@ void sendData()
   // Water quantity 1, in L
   Log.println("\t waterQty: \t" + String(Configuration._waterQty) + " L");
   MqttClient.publish(String("waterQty"), String(Configuration._waterQty));
-
-  // Restart ticker
-  tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 }
 
 /************/
@@ -278,11 +269,6 @@ void setup()
   // update NTP time and save data
   updateTimeAndSaveData();
 
-  // Create ticker for send data to MQTT
-  if (Configuration._timeSendData == 0)
-    Configuration._timeSendData = 10;
-  tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
-
   // Create ticker for compute Flow Metter, must be each 1 seconds
   tick_flowMetter.attach(1, computeFlowMetter);
 }
@@ -292,11 +278,25 @@ void setup()
 /************/
 void loop()
 {
+  unsigned long currentTick = millis();
+  static unsigned long tickSendData = 0, tickSaveData = 0;
   static uint8_t noWifiConnection = 0;
 
   MqttClient.handle();
   Log.handle();
   HTTPServer.handle();
+
+  if ((currentTick - tickSendData) > (Configuration._timeSendData * 1000))
+  {
+    sendData();
+    tickSendData = currentTick;
+  }
+
+  if ((currentTick - tickSaveData) > (Configuration._timeSaveData * 1000))
+  {
+    updateTimeAndSaveData();
+    tickSaveData = currentTick;
+  }
 
   if (!WiFi.isConnected())
   {
