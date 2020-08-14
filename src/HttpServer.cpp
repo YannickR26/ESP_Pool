@@ -45,11 +45,10 @@ void HttpServer::setup(void)
 
   _webServer.on("/", [&]() {
     _webServer.sendHeader("Access-Control-Allow-Origin", "*");
-    _webServer.client().println(String(F("==============================")));
-    _webServer.client().println(String(F("---------- ESP_Pool ----------")));
-    _webServer.client().println(String(F("  Version: ")) + F(VERSION));
-    _webServer.client().println(String(F("  Build: ")) + F(__DATE__) + " " + F(__TIME__));
-    _webServer.client().println(String(F("==============================")));
+    _webServer.client().println(String(F("<h1>ESP_Pool</h1>")));
+    _webServer.client().println(String(F("<p>Version: ")) + F(VERSION) + F("</p>"));
+    _webServer.client().println(String(F("<p>Build: ")) + F(__DATE__) + " " + F(__TIME__) + F("</p>"));
+    _webServer.client().println(String(F("<p><a href=\"update\">Update ESP</a></p>")));
   });
 
   _webServer.onNotFound([&]() {
