@@ -27,8 +27,8 @@ RollerShutter rollerShutter(RELAY_3_PIN, RELAY_4_PIN);
 SimpleRelay pump(RELAY_5_PIN, "pump");
 SimpleRelay lamp(RELAY_5_PIN, "lamp");
 
-static Ticker tick_blinker, tick_ntp, tick_flowMetter, tick_sendDataMqtt;
-static uint32_t flow1IntCnt, flow2IntCnt;
+static Ticker tick_blinker, tick_flowMetter;
+static uint32_t flow1IntCnt;// flow2IntCnt;
 
 // Value of flow
 static float waterFlow1; //, waterFlow2; // in l/min
@@ -44,10 +44,10 @@ IRAM_ATTR void onFlow1Interrupt()
 }
 
 // Compute flow 2
-IRAM_ATTR void onFlow2Interrupt()
-{
-  flow2IntCnt++;
-}
+// IRAM_ATTR void onFlow2Interrupt()
+// {
+//   flow2IntCnt++;
+// }
 
 /**************/
 /*** TICKER ***/
@@ -69,26 +69,6 @@ void blinkLED()
   }
 }
 
-void updateTimeAndSaveData()
-{
-  Log.println("Update NTP");
-
-  configTime(UTC_OFFSET * 3600, 0, NTP_SERVERS);
-  delay(500);
-  while (!time(nullptr))
-  {
-    Log.print("#");
-    delay(1000);
-  }
-
-  Log.println("Save data");
-  Configuration.saveConfig();
-
-  // Restart ticker
-  if (Configuration._timeSaveData > 0)
-    tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
-}
-
 // Call every 1 second, so the counter is equal to frequency
 void computeFlowMetter()
 {
@@ -98,7 +78,7 @@ void computeFlowMetter()
 
   // Detach the interrupt while calculating flow rate
   detachInterrupt(digitalPinToInterrupt(FLOW_1_PIN));
-  detachInterrupt(digitalPinToInterrupt(FLOW_2_PIN));
+  // detachInterrupt(digitalPinToInterrupt(FLOW_2_PIN));
 
   // Compute flow metter 1
   waterFlow1 = 0;
@@ -135,13 +115,30 @@ void computeFlowMetter()
 
   // Enable the interrupt
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
-  attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
+  // attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
+}
+
+void updateTimeAndSaveData()
+{
+  time_t now = time(nullptr);
+  Log.print("Update NTP...");
+
+  configTime(UTC_OFFSET * 3600, 0, NTP_SERVERS);
+  delay(500);
+  while (now < EPOCH_1_1_2019)
+  {
+    now = time(nullptr);
+    Log.print(".");
+    delay(500);
+  }
+
+  Log.println(" Done !");
+  Log.println("Save data...");
+  Configuration.saveConfig();
 }
 
 void sendData()
 {
-  tick_sendDataMqtt.detach();
-
   Log.println();
   Log.println("Send data to MQTT :");
 
@@ -207,9 +204,6 @@ void sendData()
   // Water level, in cm
   Log.println("\t waterLevel: \t" + String(Configuration._waterLevel) + " cm");
   MqttClient.publish(String("waterLevel"), String(Configuration._waterLevel));
-
-  // Restart ticker
-  tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 }
 
 /************/
@@ -283,7 +277,8 @@ void setup()
   tick_blinker.once(LED_TIME_NOMQTT, blinkLED);
 
   // Attach interrupt for compute frequency
-  flow1IntCnt = flow2IntCnt = 0;
+  flow1IntCnt = 0;
+  // flow2IntCnt = 0;
   attachInterrupt(digitalPinToInterrupt(FLOW_1_PIN), onFlow1Interrupt, FALLING);
   // attachInterrupt(digitalPinToInterrupt(FLOW_2_PIN), onFlow2Interrupt, FALLING);
 
@@ -347,13 +342,6 @@ void setup()
 
   // Create ticker for update NTP time and save data
   updateTimeAndSaveData();
-  if (Configuration._timeSaveData > 0)
-    tick_ntp.once(Configuration._timeSaveData, updateTimeAndSaveData);
-
-  // Create ticker for send data to MQTT
-  if (Configuration._timeSendData == 0)
-    Configuration._timeSendData = 10;
-  tick_sendDataMqtt.once(Configuration._timeSendData, sendData);
 
   // Create ticker for compute Flow Metter, must be each 1 seconds
   tick_flowMetter.attach(1, computeFlowMetter);
@@ -364,12 +352,27 @@ void setup()
 /************/
 void loop()
 {
+  unsigned long tick = millis();
+  static unsigned long tickSaveData = 0, tickSendData = 0;
   static uint8_t noWifiConnection = 0;
 
   MqttClient.handle();
   Log.handle();
   HTTPServer.handle();
   valve.handle();
+
+  if ((tick - tickSendData) >= (Configuration._timeSendData * 1000))
+  {
+    sendData();
+    tickSendData = tick;
+  }
+  
+  if ((tick - tickSaveData) >= (Configuration._timeSaveData * 1000))
+  {
+    updateTimeAndSaveData();
+    tickSaveData = tick;
+  }
+  
 
   if (!WiFi.isConnected())
   {
