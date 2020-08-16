@@ -2,10 +2,11 @@
 #include <SPIFFS.h>
 #include <ESPmDNS.h>
 
-// You can update by 'curl -F "image=@firmware.bin" ESP_Monitoring.local/'
+// You can update by 'curl -F "image=@firmware.bin" ESP_Monitoring.local/update'
 
 #include "ESP32HTTPUpdateServer.h"
 #include "HttpServer.h"
+#include "WiFiManager.h"
 #include "Logger.h"
 
 /********************************************************/
@@ -32,13 +33,35 @@ void HttpServer::setup(void)
     ESP.restart();
   });
 
+  _webServer.on("/reset", [&]() {
+    _webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    _webServer.send(200, "text/plain", "Reset WifiManager configuration, restart now in AP mode...");
+    delay(200);
+    WiFiManager wifiManager;
+    wifiManager.resetSettings();
+    delay(200);
+    ESP.restart();
+  });
+
+  _webServer.on("/", [&]() {
+    _webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    _webServer.client().println(String(F("<h1>ESP Pool</h1>")));
+    _webServer.client().println(String("<h3>"+ Configuration._hostname +"</h3>"));
+    _webServer.client().println(String(F("<p>Version: ")) + F(VERSION) + F("</p>"));
+    _webServer.client().println(String(F("<p>Build: ")) + F(__DATE__) + " " + F(__TIME__) + F("</p>"));
+    _webServer.client().println(String(F("<p><a href=\"update\">Update ESP</a></p>")));
+    _webServer.client().println(String(F("<p><a href=\"restart\">Restart</a></p>")));
+    _webServer.client().println(String(F("</br>")));
+    _webServer.client().println(String(F("<p><a href=\"reset\">Reset WiFi configuration</a></p>")));
+  });
+
   _webServer.onNotFound([&]() {
     if (!handleFileRead(_webServer.uri())) {
       _webServer.send(404, "text/plain", "File Not Found !");
     }
   });
 
-  _httpUpdater.setup(&_webServer, String("/"));
+  _httpUpdater.setup(&_webServer, String("/update"));
   _webServer.begin();
 }
 
