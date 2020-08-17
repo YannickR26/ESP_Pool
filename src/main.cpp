@@ -180,6 +180,10 @@ void wifiSetup()
   // Disable sleep mode
   WiFi.setSleepMode(WIFI_NONE_SLEEP);
 
+  // Stop AP Mode
+  WiFi.enableAP(false);
+  WiFi.softAPdisconnect();
+
   /* Get configuration from WifiManager */
   Configuration._hostname = custom_mqtt_hostname.getValue();
   Configuration._mqttIpServer = custom_mqtt_server.getValue();
