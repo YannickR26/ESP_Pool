@@ -24,8 +24,8 @@ SensorDS18B20 ds18b20(DS18B20_PIN);
 SensorAM2301 am2301_ext(DHT_1_PIN), am2301_int(DHT_2_PIN);
 SolenoidValve valve(RELAY_1_PIN, RELAY_2_PIN);
 RollerShutter rollerShutter(RELAY_3_PIN, RELAY_4_PIN);
-SimpleRelay pump(RELAY_5_PIN, "pump");
 SimpleRelay lamp(RELAY_5_PIN, "lamp");
+SimpleRelay pump(RELAY_6_PIN, "pump");
 
 static Ticker tick_blinker, tick_flowMetter;
 static uint32_t flow1IntCnt; // flow2IntCnt;
