@@ -3,11 +3,10 @@
 /********************************************************/
 /******************** Public Method *********************/
 /********************************************************/
-SensorDS18B20::SensorDS18B20(uint8_t pin)
+SensorDS18B20::SensorDS18B20(uint8_t pin) : _oneWire(pin), _sensor(&_oneWire)
 {
-    _oneWire = OneWire(pin);
-    _sensor = DallasTemperature(&_oneWire);
     _sensor.begin();
+    _sensor.setResolution(12);
 }
 
 SensorDS18B20::~SensorDS18B20()

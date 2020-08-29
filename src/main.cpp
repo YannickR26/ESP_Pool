@@ -112,6 +112,7 @@ void sendData()
   float tmp = ds18b20.readTemp();
   if (tmp != DEVICE_DISCONNECTED_C)
   {
+    tmp += 0.5f;
     Configuration._waterTemp = (Configuration._waterTemp + tmp) / 2;
     Log.println("\t waterTemp: \t" + String(Configuration._waterTemp) + " °C");
     MqttClient.publish(String("waterTemp"), String(Configuration._waterTemp));
@@ -131,7 +132,7 @@ void sendData()
     Log.println("\t humidity: \t" + String(Configuration._humidity) + " %");
     MqttClient.publish(String("humidity"), String(Configuration._humidity));
   }
-  
+
   // flow metter 1, in L/min
   Log.println("\t waterFlow: \t" + String(waterFlow) + " L/Min");
   MqttClient.publish(String("waterFlow"), String(waterFlow));
