@@ -28,7 +28,7 @@ SimpleRelay pump(RELAY_5_PIN, "pump");
 SimpleRelay lamp(RELAY_5_PIN, "lamp");
 
 static Ticker tick_blinker, tick_flowMetter;
-static uint32_t flow1IntCnt;// flow2IntCnt;
+static uint32_t flow1IntCnt; // flow2IntCnt;
 
 // Value of flow
 static float waterFlow1; //, waterFlow2; // in l/min
@@ -248,7 +248,7 @@ void wifiSetup()
   // Stop AP Mode
   WiFi.enableAP(false);
   WiFi.softAPdisconnect();
-  
+
   /* Get configuration from WifiManager */
   Configuration._hostname = custom_mqtt_hostname.getValue();
   Configuration._mqttIpServer = custom_mqtt_server.getValue();
@@ -370,13 +370,12 @@ void loop()
     sendData();
     tickSendData = tick;
   }
-  
+
   if ((tick - tickSaveData) >= (Configuration._timeSaveData * 1000))
   {
     updateTimeAndSaveData();
     tickSaveData = tick;
   }
-  
 
   if (!WiFi.isConnected())
   {
