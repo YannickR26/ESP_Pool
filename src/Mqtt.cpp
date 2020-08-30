@@ -8,11 +8,13 @@
 #include "RollerShutter.h"
 #include "SolenoidValve.h"
 #include "SimpleRelay.h"
+#include "Pwm.h"
 
 WiFiClient espClient;
 extern RollerShutter rollerShutter;
 extern SolenoidValve valve;
 extern SimpleRelay pump, lamp;
+extern Pwm lightExt;
 
 /********************************************************/
 /******************** Public Method *********************/
@@ -89,6 +91,7 @@ void Mqtt::reconnect()
         publish(String("solenoidValveMaxWaterLevel"), String(Configuration._solenoidValveMaxWaterLevel));
         publish(String("pumpTimeout"), String(Configuration._pumpTimeout));
         publish(String("lampTimeout"), String(Configuration._lampTimeout));
+        publish(String("lightExtFading"), String(Configuration._lightFading));
         // ... and resubscribe
         clientMqtt.subscribe(String(Configuration._hostname + "/set/#").c_str(), 1);
       }
@@ -249,6 +252,23 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Configuration.saveConfig();
     publish(String("lampTimeout"), String(Configuration._lampTimeout));
   }
+  else if (topicStr == String("lightExt"))
+  {
+    int value = data.toInt();
+    lightExt.setValueInPercent(value);
+    Log.println("Set lightExt to: " + String(value) + " %");
+    publish(String("lightExt"), String(value));
+  }
+  else if (topicStr == String("lightExtFading"))
+  {
+    int fading = data.toInt();
+    Configuration._lightFading = fading;
+    lightExt.setFadingSpeed(Configuration._lightFading);
+    Configuration.saveConfig();
+    Log.println("Set lightExtFading speed to: " + String(Configuration._lightFading) + " ms");
+    publish(String("lightExtFading"), String(Configuration._lightFading));
+  }
+  
   else
   {
     Log.println("Unknow command");

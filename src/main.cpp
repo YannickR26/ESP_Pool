@@ -12,6 +12,7 @@
 #include "RollerShutter.h"
 #include "SolenoidValve.h"
 #include "SimpleRelay.h"
+#include "Pwm.h"
 
 // #define ENABLE_OTA    // If defined, enable Arduino OTA code.
 
@@ -26,6 +27,7 @@ SolenoidValve valve(RELAY_1_PIN, RELAY_2_PIN);
 RollerShutter rollerShutter(RELAY_3_PIN, RELAY_4_PIN);
 SimpleRelay lamp(RELAY_5_PIN, "lamp");
 SimpleRelay pump(RELAY_6_PIN, "pump");
+Pwm lightExt(PWM_LAMP_EXT_PIN, 0, PWM_FREQUENCY);
 
 static Ticker tick_blinker, tick_flowMetter;
 static uint32_t flow1IntCnt; // flow2IntCnt;
@@ -296,6 +298,10 @@ void setup()
   pump.setTimeout(Configuration._pumpTimeout);
   lamp.setTimeout(Configuration._lampTimeout);
 
+  // Initialize PWM
+  lightExt.setup();
+  lightExt.setFadingSpeed(Configuration._lightFading);
+
   // Configure and run WifiManager
   wifiSetup();
 
@@ -356,7 +362,7 @@ void setup()
 /************/
 void loop()
 {
-  unsigned long tick = millis();
+  const unsigned long tick = millis();
   static unsigned long tickSaveData = 0, tickSendData = 0;
   static uint8_t noWifiConnection = 0;
 
@@ -364,6 +370,7 @@ void loop()
   Log.handle();
   HTTPServer.handle();
   valve.handle();
+  lightExt.handle();
 
   if ((tick - tickSendData) >= (Configuration._timeSendData * 1000))
   {
@@ -397,5 +404,5 @@ void loop()
   ArduinoOTA.handle();
 #endif
 
-  delay(50);
+  delay(10);
 }
