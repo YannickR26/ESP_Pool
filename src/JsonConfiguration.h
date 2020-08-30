@@ -35,6 +35,7 @@ public:
 	float _solenoidValveMaxWaterLevel;
 	uint16_t _pumpTimeout;
 	uint16_t _lampTimeout;
+	uint16_t _lightFading;
 
 private:
 };

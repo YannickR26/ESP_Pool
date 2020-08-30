@@ -48,6 +48,7 @@ void JsonConfiguration::setup(void)
   Log.println(String("    solenoidValveWaterLevel: ") + String(_solenoidValveMaxWaterLevel));
   Log.println(String("    pumpTimeout: ") + String(_pumpTimeout));
   Log.println(String("    lampTimeout: ") + String(_lampTimeout));
+  Log.println(String("    lightFading: ") + String(_lightFading));
 }
 
 bool JsonConfiguration::readConfig()
@@ -118,6 +119,7 @@ void JsonConfiguration::restoreDefault()
   _solenoidValveMaxWaterQty = DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER;
   _solenoidValveMaxWaterLevel = DEFAULT_SOLENOID_VALVE_MAX_LEVEL_WATER;
   _pumpTimeout = _lampTimeout = 0;
+  _lightFading = 0;
 
   saveConfig();
   Log.println("configuration restored.");
@@ -145,6 +147,7 @@ void JsonConfiguration::encodeToJson(JsonDocument &_json)
   _json["solenoidValveMaxLevelWater"] = _solenoidValveMaxWaterLevel;
   _json["pumpTimeout"] = _pumpTimeout;
   _json["lampTimeout"] = _lampTimeout;
+  _json["lightFading"] = _lightFading;
 }
 
 uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
@@ -185,6 +188,7 @@ uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
   _solenoidValveMaxWaterLevel = doc["solenoidValveMaxLevelWater"].as<float>();
   _pumpTimeout = doc["pumpTimeout"].as<uint16_t>();
   _lampTimeout = doc["lampTimeout"].as<uint16_t>();
+  _lightFading = doc["lightFading"].as<uint16_t>();
 
   return 0;
 }
