@@ -1,7 +1,7 @@
 #pragma once
 
 // Version
-#define VERSION "V1.2.0"
+#define VERSION "V1.2.3"
 
 #define DEFAULT_HOSTNAME "ESP_Pool"
 #define DEFAULT_MQTTIPSERVER "192.168.1.201"
@@ -14,7 +14,7 @@
 #define DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER 200    // in L, 200 L max
 #define DEFAULT_SOLENOID_VALVE_MAX_LEVEL_WATER 10.f // in cm, 10 cm max
 
-// Flow Meter (YF-B10)
+// Flow Meter
 #define FLOW_1_PIN 14
 #define FLOW_2_PIN 12
 #define FLOW_COEF_A 1.f / (6.f * 4.5f)
@@ -37,8 +37,8 @@
 
 // Water level
 #define WATER_LEVEL_PIN 36
-#define WATER_LEVEL_COEF_A 0.0048
-#define WATER_LEVEL_COEF_B -8.867
+#define WATER_LEVEL_COEF_A 0.0118
+#define WATER_LEVEL_COEF_B 1.16545
 
 // PWM
 #define PWM_LAMP_EXT_PIN 13
