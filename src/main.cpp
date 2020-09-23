@@ -250,6 +250,8 @@ void wifiSetup()
   // Stop AP Mode
   WiFi.enableAP(false);
   WiFi.softAPdisconnect();
+  WiFi.setAutoConnect(true);
+  WiFi.setAutoReconnect(true);
 
   /* Get configuration from WifiManager */
   Configuration._hostname = custom_mqtt_hostname.getValue();
@@ -305,6 +307,9 @@ void setup()
   // Configure and run WifiManager
   wifiSetup();
 
+  // Create ticker for update NTP time and save data
+  updateTimeAndSaveData();
+
   /* Initialize HTTP Server */
   HTTPServer.setup();
 
@@ -350,9 +355,6 @@ void setup()
   Log.println("");
 #endif
 
-  // Create ticker for update NTP time and save data
-  updateTimeAndSaveData();
-
   // Create ticker for compute Flow Metter, must be each 1 seconds
   tick_flowMetter.attach(1, computeFlowMetter);
 }
@@ -363,7 +365,7 @@ void setup()
 void loop()
 {
   const unsigned long tick = millis();
-  static unsigned long tickSaveData = 0, tickSendData = 0;
+  static unsigned long tickSaveData = 0, tickSendData = 0, tickCheckWifi = 0;
   static uint8_t noWifiConnection = 0;
 
   MqttClient.handle();
@@ -384,20 +386,27 @@ void loop()
     tickSaveData = tick;
   }
 
-  if (!WiFi.isConnected())
+  // Check wifi connection every 10 seconds
+  if ((tick - tickCheckWifi) >= 10000)
   {
-    if (noWifiConnection >= 10)
+    if (!WiFi.isConnected())
     {
-      ESP.restart();
+      // If at 60 seconds we have no wifi, we force to reconnect
+      if (noWifiConnection >= 6)
+      {
+        WiFi.reconnect();
+        // ESP.restart();
+      }
+      else
+      {
+        noWifiConnection++;
+      }
     }
     else
     {
-      noWifiConnection++;
+      noWifiConnection = 0;
     }
-  }
-  else
-  {
-    noWifiConnection = 0;
+    tickCheckWifi = tick;
   }
 
 #ifdef ENABLE_OTA
