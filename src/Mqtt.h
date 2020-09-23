@@ -17,10 +17,12 @@ public:
 	bool isConnected() { return clientMqtt.connected(); }
 
 private:
+	String getResetReason(int cpu);
 	void reconnect();
 	void callback(char *topic, uint8_t *payload, unsigned int length);
 
 	PubSubClient clientMqtt;
+	String startedAt;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES)

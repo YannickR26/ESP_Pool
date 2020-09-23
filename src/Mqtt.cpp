@@ -1,7 +1,7 @@
 #include "Mqtt.h"
 
 #include "JsonConfiguration.h"
-
+#include <rom/rtc.h>
 #include <WiFi.h>
 #include <WiFiManager.h>
 #include "Logger.h"
@@ -22,7 +22,6 @@ extern Pwm lightExt;
 
 Mqtt::Mqtt()
 {
-  clientMqtt.setClient(espClient);
 }
 
 Mqtt::~Mqtt()
@@ -31,8 +30,10 @@ Mqtt::~Mqtt()
 
 void Mqtt::setup()
 {
+  clientMqtt.setClient(espClient);
   clientMqtt.setServer(Configuration._mqttIpServer.c_str(), Configuration._mqttPortServer);
   clientMqtt.setCallback([this](char *topic, uint8_t *payload, unsigned int length) { this->callback(topic, payload, length); });
+  startedAt = String(Log.getDateTimeString());
 }
 
 void Mqtt::handle()
@@ -59,6 +60,29 @@ void Mqtt::log(String level, String str)
 /******************** Private Method ********************/
 /********************************************************/
 
+String Mqtt::getResetReason(int cpu)
+{
+  switch (rtc_get_reset_reason(cpu))
+  {
+    case 1 : return String("POWERON_RESET");          /**<1, Vbat power on reset*/
+    case 3 : return String("SW_RESET");               /**<3, Software reset digital core*/
+    case 4 : return String("OWDT_RESET");             /**<4, Legacy watch dog reset digital core*/
+    case 5 : return String("DEEPSLEEP_RESET");        /**<5, Deep Sleep reset digital core*/
+    case 6 : return String("SDIO_RESET");             /**<6, Reset by SLC module, reset digital core*/
+    case 7 : return String("TG0WDT_SYS_RESET");       /**<7, Timer Group0 Watch dog reset digital core*/
+    case 8 : return String("TG1WDT_SYS_RESET");       /**<8, Timer Group1 Watch dog reset digital core*/
+    case 9 : return String("RTCWDT_SYS_RESET");       /**<9, RTC Watch dog Reset digital core*/
+    case 10 : return String("INTRUSION_RESET");       /**<10, Instrusion tested to reset CPU*/
+    case 11 : return String("TGWDT_CPU_RESET");       /**<11, Time Group reset CPU*/
+    case 12 : return String("SW_CPU_RESET");          /**<12, Software reset CPU*/
+    case 13 : return String("RTCWDT_CPU_RESET");      /**<13, RTC Watch dog Reset CPU*/
+    case 14 : return String("EXT_CPU_RESET");         /**<14, for APP CPU, reseted by PRO CPU*/
+    case 15 : return String("RTCWDT_BROWN_OUT_RESET");/**<15, Reset when the vdd voltage is not stable*/
+    case 16 : return String("RTCWDT_RTC_RESET");      /**<16, RTC Watch dog reset digital core and rtc module*/
+    default : return String("NO_MEAN");
+  }
+}
+
 void Mqtt::reconnect()
 {
   static unsigned long tick = 0;
@@ -69,8 +93,7 @@ void Mqtt::reconnect()
     {
       Log.print("Attempting MQTT connection... ");
       // Create a random clientMqtt ID
-      String clientId = "ESP8266Client-";
-      clientId += String(random(0xffff), HEX);
+      String clientId = Configuration._hostname + String(random(0xffff), HEX);
       // Attempt to connect
       if (clientMqtt.connect(clientId.c_str(), 0, 1, 0, 0))
       {
@@ -81,6 +104,8 @@ void Mqtt::reconnect()
         publish(String("version"), String(VERSION));
         publish(String("build"), String(String(__DATE__) + " " + String(__TIME__)));
         publish(String("ip"), WiFi.localIP().toString());
+        publish(String("startedAt"), String(startedAt));
+        publish(String("resetReason"), getResetReason(0));
         publish(String("timeSendData"), String(Configuration._timeSendData));
         publish(String("timeSaveData"), String(Configuration._timeSaveData));
         publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
@@ -268,7 +293,7 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Log.println("Set lightExtFading speed to: " + String(Configuration._lightFading) + " ms");
     publish(String("lightExtFading"), String(Configuration._lightFading));
   }
-  
+
   else
   {
     Log.println("Unknow command");
