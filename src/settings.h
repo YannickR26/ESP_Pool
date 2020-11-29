@@ -1,7 +1,7 @@
 #pragma once
 
 // Version
-#define VERSION "V1.2.3"
+#define VERSION "V1.2.4"
 
 #define DEFAULT_HOSTNAME "ESP_Pool"
 #define DEFAULT_MQTTIPSERVER "192.168.1.201"
@@ -13,6 +13,7 @@
 #define DEFAULT_SOLENOID_VALVE_TIMEOUT (5 * 60)     // in seconds, 5 minutes timeout
 #define DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER 200    // in L, 200 L max
 #define DEFAULT_SOLENOID_VALVE_MAX_LEVEL_WATER 10.f // in cm, 10 cm max
+#define DEFAULT_LIGHT_FADING 50                     // in ms
 
 // Flow Meter
 #define FLOW_1_PIN 14

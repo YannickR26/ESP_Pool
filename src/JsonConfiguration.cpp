@@ -111,7 +111,7 @@ void JsonConfiguration::restoreDefault()
   _timeSaveData = DEFAULT_SAVE_DATA_INTERVAL_SEC;
   _timeSendData = DEFAULT_SEND_DATA_INTERVAL_SEC;
   _waterQtyA = _waterQtyB = 0;
-  _waterLevel = _waterTemp;
+  _waterLevel = _waterTemp = 0;
   _intTemp = _extTemp = 0;
   _intHumidity = _extHumidity = 0;
   _rollerShutterTimeout = DEFAULT_ROLLER_SHUTTER_TIMEOUT;
@@ -119,7 +119,7 @@ void JsonConfiguration::restoreDefault()
   _solenoidValveMaxWaterQty = DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER;
   _solenoidValveMaxWaterLevel = DEFAULT_SOLENOID_VALVE_MAX_LEVEL_WATER;
   _pumpTimeout = _lampTimeout = 0;
-  _lightFading = 0;
+  _lightFading = DEFAULT_LIGHT_FADING;
 
   saveConfig();
   Log.println("configuration restored.");

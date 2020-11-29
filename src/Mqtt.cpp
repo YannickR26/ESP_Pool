@@ -287,10 +287,10 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
   else if (topicStr == String("lightExtFading"))
   {
     int fading = data.toInt();
+    Log.println("Set lightExtFading speed to: " + String(fading) + " ms");
+    lightExt.setFadingSpeed(fading);
     Configuration._lightFading = fading;
-    lightExt.setFadingSpeed(Configuration._lightFading);
     Configuration.saveConfig();
-    Log.println("Set lightExtFading speed to: " + String(Configuration._lightFading) + " ms");
     publish(String("lightExtFading"), String(Configuration._lightFading));
   }
 
