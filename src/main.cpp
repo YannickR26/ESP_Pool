@@ -219,7 +219,7 @@ void sendData()
 
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info)
 {
-  Serial.printf("[WiFi-event] event: %d\n", event);
+  Serial.printf("[WiFi-event] event: %d => ", event);
 
   switch (event)
   {
