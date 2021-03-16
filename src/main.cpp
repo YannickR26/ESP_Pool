@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <WiFiManager.h>
+#include <ESP_WiFiManager.h>
 #include <Ticker.h>
 
 #include "JsonConfiguration.h"
@@ -311,16 +311,16 @@ void wifiSetup()
 {
   WiFi.onEvent(WiFiEvent);
 
-  WiFiManager wm;
+  ESP_WiFiManager wm;
   // wm.setDebugOutput(false);
   // wm.resetSettings();
 
   // WiFiManagerParameter
-  WiFiManagerParameter custom_mqtt_hostname("hostname", "hostname", Configuration._hostname.c_str(), 60);
-  WiFiManagerParameter custom_mqtt_server("server", "mqtt ip", Configuration._mqttIpServer.c_str(), 40);
-  WiFiManagerParameter custom_mqtt_port("port", "mqtt port", String(Configuration._mqttPortServer).c_str(), 6);
-  WiFiManagerParameter custom_time_update("timeSendData", "time update data (s)", String(Configuration._timeSendData).c_str(), 6);
-  WiFiManagerParameter custom_time_save("timeSaveData", "time save data (s)", String(Configuration._timeSaveData).c_str(), 6);
+  ESP_WMParameter custom_mqtt_hostname("hostname", "hostname", Configuration._hostname.c_str(), 60);
+  ESP_WMParameter custom_mqtt_server("server", "mqtt ip", Configuration._mqttIpServer.c_str(), 40);
+  ESP_WMParameter custom_mqtt_port("port", "mqtt port", String(Configuration._mqttPortServer).c_str(), 6);
+  ESP_WMParameter custom_time_update("timeSendData", "time update data (s)", String(Configuration._timeSendData).c_str(), 6);
+  ESP_WMParameter custom_time_save("timeSaveData", "time save data (s)", String(Configuration._timeSaveData).c_str(), 6);
 
   // add all your parameters here
   wm.addParameter(&custom_mqtt_hostname);
@@ -369,7 +369,6 @@ void setup()
 {
   /* Initialize Logger */
   Log.setup();
-  Log.println();
   Log.println(String(F("==============================")));
   Log.println(String(F("---------- ESP_Pool ----------")));
   Log.println(String(F("  Version: ")) + F(VERSION));
