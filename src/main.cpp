@@ -153,7 +153,6 @@ void sendData()
   float tmp = ds18b20.readTemp();
   if (tmp != DEVICE_DISCONNECTED_C)
   {
-    tmp += 0.5f;
     Configuration._waterTemp = (Configuration._waterTemp + tmp) / 2;
     Log.println("\t waterTemp1: \t" + String(Configuration._waterTemp) + " °C");
     MqttClient.publish(String("waterTemp1"), String(Configuration._waterTemp));
