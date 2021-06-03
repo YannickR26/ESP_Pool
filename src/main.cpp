@@ -251,10 +251,10 @@ void setup()
     Log.println("Arduino OTA: End");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Log.printf("Arduino OTA Progress: %u%%\r", (progress / (total / 100)));
+    Serial.printf("Arduino OTA Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Log.printf("Arduino OTA Error[%u]: ", error);
+    Serial.printf("Arduino OTA Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR)
       Log.println("Arduino OTA: Auth Failed");
     else if (error == OTA_BEGIN_ERROR)
