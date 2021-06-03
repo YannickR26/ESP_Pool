@@ -1,3 +1,11 @@
+/*
+ *  SensorDS18B20.h
+ *
+ *  Created on: 10/04/2021
+ * 
+ *  Author : Yannick RICHARDOT (yannick.richardot@carbonbee.fr)
+ */
+
 #pragma once
 
 #include <OneWire.h>
@@ -6,12 +14,34 @@
 class SensorDS18B20
 {
 public:
-    SensorDS18B20(uint8_t pin);
-    virtual ~SensorDS18B20();
+    SensorDS18B20(uint8_t pin) : _oneWire(pin), _sensor(&_oneWire)
+    {
+        _sensor.begin();
+        _sensor.setResolution(12);
+    }
 
-    float readTemp();
+    virtual ~SensorDS18B20() {}
 
-protected:
+    float readTemp()
+    {
+        float temp;
+        unsigned long timeout = millis() + 2000;
+
+        do
+        {
+            // Send the command to get temperatures
+            _sensor.requestTemperatures();
+            delay(200);
+            temp = _sensor.getTempCByIndex(0);
+            delay(50);
+        } while ((temp == DEVICE_DISCONNECTED_C) && (millis() < timeout));
+
+        if (temp == DEVICE_DISCONNECTED_C)
+            return DEVICE_DISCONNECTED_C;
+
+        return temp;
+    }
+
 private:
     OneWire _oneWire;
     DallasTemperature _sensor;
