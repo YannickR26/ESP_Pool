@@ -32,7 +32,7 @@ void HttpServer::setup(void)
     delay(200);
     ESP.restart();
   });
-  
+
   _webServer.on("/reset", [&]() {
     _webServer.sendHeader("Access-Control-Allow-Origin", "*");
     _webServer.send(200, "text/plain", "Reset WifiManager configuration, restart now in AP mode...");
@@ -45,10 +45,14 @@ void HttpServer::setup(void)
 
   _webServer.on("/", [&]() {
     _webServer.sendHeader("Access-Control-Allow-Origin", "*");
-    _webServer.client().println(String(F("<h1>ESP_Pool</h1>")));
+    _webServer.client().println(String(F("<h1>ESP Pool</h1>")));
+    _webServer.client().println(String("<h3>"+ Configuration._hostname +"</h3>"));
     _webServer.client().println(String(F("<p>Version: ")) + F(VERSION) + F("</p>"));
     _webServer.client().println(String(F("<p>Build: ")) + F(__DATE__) + " " + F(__TIME__) + F("</p>"));
     _webServer.client().println(String(F("<p><a href=\"update\">Update ESP</a></p>")));
+    _webServer.client().println(String(F("<p><a href=\"restart\">Restart</a></p>")));
+    _webServer.client().println(String(F("</br>")));
+    _webServer.client().println(String(F("<p><a href=\"reset\">Reset WiFi configuration</a></p>")));
   });
 
   _webServer.onNotFound([&]() {
