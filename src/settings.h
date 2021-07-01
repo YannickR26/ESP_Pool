@@ -3,12 +3,12 @@
 // Version
 #define VERSION "V1.1.6"
 
-#define DEFAULT_HOSTNAME "ESP_Pool"
+#define DEFAULT_HOSTNAME "ESP_Pool_Factory"
 #define DEFAULT_MQTTIPSERVER "192.168.1.10"
 #define DEFAULT_MQTTPORTSERVER 1883
 
 #define DEFAULT_SAVE_DATA_INTERVAL_SEC  (1 * 3600)      // in seconds, Update time from NTP server and save data every 1 hours
-#define DEFAULT_SEND_DATA_INTERVAL_SEC  15              // in seconds, Log data every 5 secondes
+#define DEFAULT_SEND_DATA_INTERVAL_SEC  120             // in seconds, Log data every 120 secondes
 
 // Flow Meter :
 // YF-B10
