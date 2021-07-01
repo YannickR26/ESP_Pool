@@ -224,7 +224,27 @@ void setup()
   // Configuration.restoreDefault();
 
   // Configure and run WifiManager
-  wifiSetup();
+  // wifiSetup();
+  WiFi.setHostname(Configuration._hostname.c_str());
+  WiFi.begin("Aqua_FitWave", "Aqua_FitWave26");
+
+  Log.print("Waiting for Wifi connection");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(200);
+    Log.print(".");
+  }
+  Log.println(" done !");
+
+  Log.println(String("Connected to ") + WiFi.SSID());
+  Log.println(String("IP address: ") + WiFi.localIP().toString());
+
+  // Disable sleep mode
+  WiFi.setSleepMode(WIFI_NONE_SLEEP);
+
+  // Stop AP Mode
+  WiFi.enableAP(false);
+  WiFi.softAPdisconnect();
 
   /* Initialize HTTP Server */
   HTTPServer.setup();
