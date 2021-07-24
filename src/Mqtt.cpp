@@ -95,7 +95,8 @@ void Mqtt::reconnect()
       // Create a random clientMqtt ID
       String clientId = Configuration._hostname + String(random(0xffff), HEX);
       // Attempt to connect
-      if (clientMqtt.connect(clientId.c_str(), 0, 1, 0, 0))
+      clientMqtt.setSocketTimeout(5);
+      if (clientMqtt.connect(clientId.c_str()))
       {
         Log.println("connected !");
         // Once connected, publish an announcement...
@@ -108,8 +109,7 @@ void Mqtt::reconnect()
         publish(String("resetReason"), getResetReason(0));
         publish(String("timeSendData"), String(Configuration._timeSendData));
         publish(String("timeSaveData"), String(Configuration._timeSaveData));
-        publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
-        publish(String("rollerShutter"), String("stop"));
+        publish(String("rollerShutterDuration"), String(Configuration._rollerShutterDuration));
         publish(String("solenoidValve"), String("close"));
         publish(String("solenoidValveTimeout"), String(Configuration._solenoidValveTimeout));
         publish(String("solenoidValveMaxWaterQty"), String(Configuration._solenoidValveMaxWaterQty));
@@ -147,6 +147,9 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
   String topicStr(topic);
   topicStr.remove(0, topicStr.lastIndexOf('/') + 1);
 
+  /*********************
+   * Global Conf
+   *********************/
   if (topicStr == String("timeSendData"))
   {
     int time = data.toInt();
@@ -181,6 +184,10 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     wifiManager.resetSettings();
     ESP.restart();
   }
+
+  /*********************
+   * Water
+   *********************/
   else if (topicStr == String("waterQty1"))
   {
     int qty = data.toInt();
@@ -197,25 +204,46 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Configuration.saveConfig();
     publish(String("waterQty2"), String(Configuration._waterQtyB));
   }
-  else if (topicStr == String("rollerShutterTimeout"))
+
+  /*********************
+   * Roller Shutter
+   *********************/
+  else if (topicStr == String("rollerShutterDuration"))
   {
-    int timeout = data.toInt();
-    Log.println("Set rollerShutterTimeout to: " + String(timeout) + " s");
-    rollerShutter.setTimeout(timeout);
-    Configuration._rollerShutterTimeout = timeout;
+    float duration = data.toFloat();
+    Log.println("Set rollerShutterDuration to: " + String(duration) + " s");
+    rollerShutter.setDuration(duration);
+    Configuration._rollerShutterDuration = duration;
     Configuration.saveConfig();
-    publish(String("rollerShutterTimeout"), String(Configuration._rollerShutterTimeout));
+    publish(String("rollerShutterDuration"), String(Configuration._rollerShutterDuration));
   }
-  else if (topicStr == String("rollerShutter"))
+  else if (topicStr == String("rollerShutterPosition"))
   {
-    Log.println("Set rollerShutter to: " + data);
-    if (data == String("open"))
-      rollerShutter.open();
-    else if (data == String("stop"))
-      rollerShutter.stop();
-    else if (data == String("close"))
-      rollerShutter.close();
+    float position = data.toFloat();
+    Log.println("Set rollerShutterPosition to: " + String(position) + " %");
+    rollerShutter.setPosition(position);
+    Configuration._rollerShutterPosition = position;
+    Configuration.saveConfig();
   }
+  else if (topicStr == String("rollerShutterOpen"))
+  {
+    Log.println("Set rollerShutter to Open");
+    rollerShutter.open();
+  }
+  else if (topicStr == String("rollerShutterStop"))
+  {
+    Log.println("Set rollerShutter to Stop");
+    rollerShutter.stop();
+  }
+  else if (topicStr == String("rollerShutterClose"))
+  {
+    Log.println("Set rollerShutter to Close");
+    rollerShutter.close();
+  }
+
+  /*********************
+   * Solenoid Valve
+   *********************/
   else if (topicStr == String("solenoidValve"))
   {
     Log.println("Set solenoidValve to: " + data);
@@ -251,6 +279,10 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Configuration.saveConfig();
     publish(String("solenoidValveMaxWaterLevel"), String(Configuration._solenoidValveMaxWaterLevel));
   }
+
+  /*********************
+   * Pump
+   *********************/
   else if (topicStr == String("pump"))
   {
     int state = data.toInt();
@@ -264,6 +296,10 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Configuration.saveConfig();
     publish(String("pumpTimeout"), String(Configuration._pumpTimeout));
   }
+
+  /*********************
+   * Lamp
+   *********************/
   else if (topicStr == String("lamp"))
   {
     int state = data.toInt();
@@ -277,6 +313,10 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     Configuration.saveConfig();
     publish(String("lampTimeout"), String(Configuration._lampTimeout));
   }
+
+  /*********************
+   * Light
+   *********************/
   else if (topicStr == String("lightExt"))
   {
     int value = data.toInt();
