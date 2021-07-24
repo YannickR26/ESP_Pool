@@ -24,7 +24,7 @@ HttpServer::~HttpServer()
 
 void HttpServer::setup(void)
 {
-  MDNS.begin(Configuration._hostname.c_str()); 
+  MDNS.begin(Configuration._hostname.c_str());
   MDNS.addService("http", "tcp", 80);
 
   _webServer.on("/restart", [&]() {
@@ -111,7 +111,7 @@ bool HttpServer::handleFileRead(String path)
   return false;
 }
 
-WebServer& HttpServer::webServer() 
+WebServer& HttpServer::webServer()
 {
   return _webServer;
 }
@@ -139,6 +139,6 @@ void HttpServer::sendJson(const uint16_t code, JsonDocument& doc)
   serializeJson(doc, client);
 }
 
-#if !defined(NO_GLOBAL_INSTANCES) 
+#if !defined(NO_GLOBAL_INSTANCES)
 HttpServer HTTPServer;
 #endif
