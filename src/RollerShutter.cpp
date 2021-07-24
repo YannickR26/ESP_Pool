@@ -17,6 +17,7 @@ RollerShutter::RollerShutter(uint8_t pinOpen, uint8_t pinClose)
   digitalWrite(_pinClose, 0);
   _duration = 0.f;
   _position = 0;  // 0 => Close, 100 => Open
+  _target = 0;
   _direction = 0; // -1 => to Close, 0 => Stop, 1 => to Open
   _oldTick = 0;
 }
@@ -67,6 +68,12 @@ void RollerShutter::setDuration(const float timeInSeconds)
 void RollerShutter::setCurrentPosition(const float position)
 {
   _position = position;
+  _target = position;
+}
+
+float RollerShutter::getTarget()
+{
+  return _target;
 }
 
 // 0 %   => Close

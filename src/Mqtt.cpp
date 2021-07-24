@@ -220,6 +220,8 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
   else if (topicStr == String("rollerShutterPosition"))
   {
     float position = data.toFloat();
+    if (rollerShutter.getTarget() == position)
+      return;
     Log.println("Set rollerShutterPosition to: " + String(position) + " %");
     rollerShutter.setPosition(position);
     Configuration._rollerShutterPosition = position;

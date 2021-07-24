@@ -13,6 +13,7 @@ public:
 
     void setDuration(const float timeInSeconds);
     void setCurrentPosition(const float position);
+    float getTarget();
     void setPosition(const float positionInPercent);
     void open();
     void close();
