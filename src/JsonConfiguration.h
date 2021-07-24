@@ -29,7 +29,8 @@ public:
 	float _waterLevel, _waterTemp;
 	float _intTemp, _extTemp;
 	float _intHumidity, _extHumidity;
-	uint16_t _rollerShutterTimeout;
+	float _rollerShutterDuration;
+	float _rollerShutterPosition;
 	uint16_t _solenoidValveTimeout;
 	uint16_t _solenoidValveMaxWaterQty;
 	float _solenoidValveMaxWaterLevel;

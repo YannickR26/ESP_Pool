@@ -42,7 +42,8 @@ void JsonConfiguration::setup(void)
   Log.println(String("    intHumidity: ") + String(_intHumidity));
   Log.println(String("    extTemp: ") + String(_extTemp));
   Log.println(String("    extHumidity: ") + String(_extHumidity));
-  Log.println(String("    rollerShutterTimeout: ") + String(_rollerShutterTimeout));
+  Log.println(String("    rollerShutterDuration: ") + String(_rollerShutterDuration));
+  Log.println(String("    rollerShutterPosition: ") + String((int)_rollerShutterPosition));
   Log.println(String("    solenoidValveTimeout: ") + String(_solenoidValveTimeout));
   Log.println(String("    solenoidValveWaterQty: ") + String(_solenoidValveMaxWaterQty));
   Log.println(String("    solenoidValveWaterLevel: ") + String(_solenoidValveMaxWaterLevel));
@@ -69,7 +70,8 @@ bool JsonConfiguration::readConfig()
   std::unique_ptr<char[]> buf(new char[size]);
 
   configFile.readBytes(buf.get(), size);
-  decodeJsonFromFile(buf.get());
+  if (decodeJsonFromFile(buf.get()) != 0)
+    return false;
 
   configFile.close();
 
@@ -114,7 +116,8 @@ void JsonConfiguration::restoreDefault()
   _waterLevel = _waterTemp = 0;
   _intTemp = _extTemp = 0;
   _intHumidity = _extHumidity = 0;
-  _rollerShutterTimeout = DEFAULT_ROLLER_SHUTTER_TIMEOUT;
+  _rollerShutterDuration = DEFAULT_ROLLER_SHUTTER_TIMEOUT;
+  _rollerShutterPosition = 0;
   _solenoidValveTimeout = DEFAULT_SOLENOID_VALVE_TIMEOUT;
   _solenoidValveMaxWaterQty = DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER;
   _solenoidValveMaxWaterLevel = DEFAULT_SOLENOID_VALVE_MAX_LEVEL_WATER;
@@ -141,7 +144,8 @@ void JsonConfiguration::encodeToJson(JsonDocument &_json)
   _json["intHumidity"] = _intHumidity;
   _json["extTemp"] = _extTemp;
   _json["extHumidity"] = _extHumidity;
-  _json["rollerShutterTimeout"] = _rollerShutterTimeout;
+  _json["rollerShutterDuration"] = _rollerShutterDuration;
+  _json["rollerShutterPosition"] = _rollerShutterPosition;
   _json["solenoidValveTimeout"] = _solenoidValveTimeout;
   _json["solenoidValveMaxQtyWater"] = _solenoidValveMaxWaterQty;
   _json["solenoidValveMaxLevelWater"] = _solenoidValveMaxWaterLevel;
@@ -175,14 +179,15 @@ uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
   _timeSaveData = doc["timeSaveData"].as<uint16_t>();
   _timeSendData = doc["timeSendData"].as<uint16_t>();
   _waterQtyA = doc["waterQtyA"].as<float>();
-  _waterQtyB = doc["waterQtyB"].as<float>();  
-  _waterLevel = doc["waterLevel"].as<float>();  
-  _waterTemp = doc["waterTemp"].as<float>();  
-  _intTemp = doc["intTemp"].as<float>();  
-  _intHumidity = doc["intHumidity"].as<float>();  
-  _extTemp = doc["extTemp"].as<float>();  
-  _extHumidity = doc["extHumidity"].as<float>();  
-  _rollerShutterTimeout = doc["rollerShutterTimeout"].as<uint16_t>();
+  _waterQtyB = doc["waterQtyB"].as<float>();
+  _waterLevel = doc["waterLevel"].as<float>();
+  _waterTemp = doc["waterTemp"].as<float>();
+  _intTemp = doc["intTemp"].as<float>();
+  _intHumidity = doc["intHumidity"].as<float>();
+  _extTemp = doc["extTemp"].as<float>();
+  _extHumidity = doc["extHumidity"].as<float>();
+  _rollerShutterDuration = doc["rollerShutterDuration"].as<float>();
+  _rollerShutterPosition = doc["rollerShutterPosition"].as<float>();
   _solenoidValveTimeout = doc["solenoidValveTimeout"].as<uint16_t>();
   _solenoidValveMaxWaterQty = doc["solenoidValveMaxQtyWater"].as<uint16_t>();
   _solenoidValveMaxWaterLevel = doc["solenoidValveMaxLevelWater"].as<float>();
