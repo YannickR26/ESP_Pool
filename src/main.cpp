@@ -141,6 +141,10 @@ void updateTimeAndSaveData()
 
 void sendData()
 {
+  // If MQTT is not connected, we return now
+  if (!MqttClient.isConnected())
+    return;
+
   Log.println();
   Log.println("Read and Send data to MQTT :");
 
@@ -392,7 +396,8 @@ void setup()
   /* Read configuration from SPIFFS */
   Configuration.setup();
   // Configuration.restoreDefault();
-  rollerShutter.setTimeout(Configuration._rollerShutterTimeout);
+  rollerShutter.setDuration(Configuration._rollerShutterDuration);
+  rollerShutter.setCurrentPosition(Configuration._rollerShutterPosition);
   valve.setTimeout(Configuration._solenoidValveTimeout);
   valve.setMaxWaterQuantity(Configuration._solenoidValveMaxWaterQty);
   valve.setMaxWaterLevel(Configuration._solenoidValveMaxWaterLevel);
@@ -404,7 +409,27 @@ void setup()
   lightExt.setFadingSpeed(Configuration._lightFading);
 
   // Configure and run WifiManager
+#ifdef USE_WIFI_MANAGER
   wifiSetup();
+#else
+  WiFi.setHostname(Configuration._hostname.c_str());
+  WiFi.begin("Internet-Maison-Tenda", "MaisonMoreauRichardot");
+
+  Log.print("Waiting for Wifi connection");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(200);
+    Log.print(".");
+  }
+  Log.println(" done !");
+
+  Log.println(String("Connected to ") + WiFi.SSID());
+  Log.println(String("IP address: ") + WiFi.localIP().toString());
+
+  // Stop AP Mode
+  WiFi.enableAP(false);
+  WiFi.softAPdisconnect();
+#endif
 
   // Create ticker for update NTP time and save data
   updateTimeAndSaveData();
@@ -472,6 +497,7 @@ void loop()
   HTTPServer.handle();
   valve.handle();
   lightExt.handle();
+  rollerShutter.handle();
 
   if ((tick - tickSendData) >= (Configuration._timeSendData * 1000))
   {
