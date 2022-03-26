@@ -47,7 +47,9 @@ void JsonConfiguration::setup(void)
   Log.println(String("    solenoidValveTimeout: ") + String(_solenoidValveTimeout));
   Log.println(String("    solenoidValveWaterQty: ") + String(_solenoidValveMaxWaterQty));
   Log.println(String("    solenoidValveWaterLevel: ") + String(_solenoidValveMaxWaterLevel));
-  Log.println(String("    pumpTimeout: ") + String(_pumpTimeout));
+  Log.println(String("    pumpModeAuto: ") + String(_pumpModeAuto));
+  Log.println(String("    pumpStart: ") + String(_pumpStartHours) + ":" + String(_pumpStartMinutes));
+  Log.println(String("    pumpStop: ") + String(_pumpStopHours) + ":" + String(_pumpStopMinutes));
   Log.println(String("    lampTimeout: ") + String(_lampTimeout));
   Log.println(String("    lightFading: ") + String(_lightFading));
 }
@@ -121,7 +123,10 @@ void JsonConfiguration::restoreDefault()
   _solenoidValveTimeout = DEFAULT_SOLENOID_VALVE_TIMEOUT;
   _solenoidValveMaxWaterQty = DEFAULT_SOLENOID_VALVE_MAX_QTY_WATER;
   _solenoidValveMaxWaterLevel = DEFAULT_SOLENOID_VALVE_MAX_LEVEL_WATER;
-  _pumpTimeout = _lampTimeout = 0;
+  _lampTimeout = 0;
+  _pumpModeAuto = false;
+  _pumpStartHours = _pumpStartMinutes = 0;
+  _pumpStopHours = _pumpStopMinutes = 0;
   _lightFading = DEFAULT_LIGHT_FADING;
 
   saveConfig();
@@ -149,7 +154,11 @@ void JsonConfiguration::encodeToJson(JsonDocument &_json)
   _json["solenoidValveTimeout"] = _solenoidValveTimeout;
   _json["solenoidValveMaxQtyWater"] = _solenoidValveMaxWaterQty;
   _json["solenoidValveMaxLevelWater"] = _solenoidValveMaxWaterLevel;
-  _json["pumpTimeout"] = _pumpTimeout;
+  _json["pumpModeAuto"] = _pumpModeAuto;
+  _json["pumpStartHours"] = _pumpStartHours;
+  _json["pumpStartMinutes"] = _pumpStartMinutes;
+  _json["pumpStopHours"] = _pumpStopHours;
+  _json["pumpStopMinutes"] = _pumpStopMinutes;
   _json["lampTimeout"] = _lampTimeout;
   _json["lightFading"] = _lightFading;
 }
@@ -191,7 +200,11 @@ uint8_t JsonConfiguration::decodeJsonFromFile(const char *input)
   _solenoidValveTimeout = doc["solenoidValveTimeout"].as<uint16_t>();
   _solenoidValveMaxWaterQty = doc["solenoidValveMaxQtyWater"].as<uint16_t>();
   _solenoidValveMaxWaterLevel = doc["solenoidValveMaxLevelWater"].as<float>();
-  _pumpTimeout = doc["pumpTimeout"].as<uint16_t>();
+  _pumpModeAuto = doc["pumpModeAuto"].as<bool>();
+  _pumpStartHours = doc["pumpStartHours"].as<uint8_t>();
+  _pumpStartMinutes = doc["pumpStartMinutes"].as<uint8_t>();
+  _pumpStopHours = doc["pumpStopHours"].as<uint8_t>();
+  _pumpStopMinutes = doc["pumpStopMinutes"].as<uint8_t>();
   _lampTimeout = doc["lampTimeout"].as<uint16_t>();
   _lightFading = doc["lightFading"].as<uint16_t>();
 
