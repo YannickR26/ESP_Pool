@@ -8,12 +8,14 @@
 #include "RollerShutter.h"
 #include "SolenoidValve.h"
 #include "SimpleRelay.h"
+#include "ExtendedRelay.h"
 #include "Pwm.h"
 
 WiFiClient espClient;
 extern RollerShutter rollerShutter;
 extern SolenoidValve valve;
-extern SimpleRelay pump, lamp;
+extern SimpleRelay lamp;
+extern ExtendedRelay pump;
 extern Pwm lightExt;
 
 /********************************************************/
@@ -114,7 +116,10 @@ void Mqtt::reconnect()
         publish(String("solenoidValveTimeout"), String(Configuration._solenoidValveTimeout));
         publish(String("solenoidValveMaxWaterQty"), String(Configuration._solenoidValveMaxWaterQty));
         publish(String("solenoidValveMaxWaterLevel"), String(Configuration._solenoidValveMaxWaterLevel));
-        publish(String("pumpTimeout"), String(Configuration._pumpTimeout));
+        publish(String("pump"), String(pump.getState()));
+        publish(String("pumpModeAuto"), String(Configuration._pumpModeAuto));
+        publish(String("pumpStartTime"), String(Configuration._pumpStartHours) + ":" + String(Configuration._pumpStartMinutes));
+        publish(String("pumpStopTime"), String(Configuration._pumpStopHours) + ":" + String(Configuration._pumpStopMinutes));
         publish(String("lampTimeout"), String(Configuration._lampTimeout));
         publish(String("lightExtFading"), String(Configuration._lightFading));
         // ... and resubscribe
@@ -290,13 +295,36 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
     int state = data.toInt();
     pump.setState(state);
   }
-  else if (topicStr == String("pumpTimeout"))
+  else if (topicStr == String("pumpModeAuto"))
   {
-    int timeout = data.toInt();
-    Log.println("Set pumpTimeout to: " + String(timeout) + " s");
-    Configuration._pumpTimeout = timeout;
+    int state = data.toInt();
+    Log.println("Change pumpModeAuto to: " + String(state));
+    Configuration._pumpModeAuto = state ? true : false;
     Configuration.saveConfig();
-    publish(String("pumpTimeout"), String(Configuration._pumpTimeout));
+    pump.setModeAuto(state ? true : false);
+    publish(String("pumpModeAuto"), String(Configuration._pumpModeAuto));
+  }
+  else if (topicStr == String("pumpStartTime"))
+  {
+    int hours = data.toInt();
+    int minutes = data.substring(data.indexOf(':')+1).toInt();
+    Log.println("Set pumpStart at: " + String(hours) + ":" + String(minutes));
+    Configuration._pumpStartHours = hours;
+    Configuration._pumpStartMinutes = minutes;
+    Configuration.saveConfig();
+    pump.setStartTime(hours, minutes);
+    publish(String("pumpStartTime"), String(hours) + ":" + String(minutes));
+  }
+  else if (topicStr == String("pumpStopTime"))
+  {
+    int hours = data.toInt();
+    int minutes = data.substring(data.indexOf(':')+1).toInt();
+    Log.println("Set pumpStop at: " + String(hours) + ":" + String(minutes));
+    Configuration._pumpStopHours = hours;
+    Configuration._pumpStopMinutes = minutes;
+    Configuration.saveConfig();
+    pump.setStopTime(hours, minutes);
+    publish(String("pumpStopTime"), String(hours) + ":" + String(minutes));
   }
 
   /*********************
