@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP_WiFiManager.h>
 #include <Ticker.h>
+#include <time.h>
 
 #include "JsonConfiguration.h"
 #include "HttpServer.h"
@@ -123,20 +124,17 @@ void computeFlowMetter()
 
 void updateTimeAndSaveData()
 {
-  time_t now = time(nullptr);
+  struct tm timeinfo;
+
   Log.print("Update NTP...");
 
-  configTime(UTC_OFFSET * 3600, 0, NTP_SERVERS);
-  delay(500);
-  while (now < EPOCH_1_1_2019)
-  {
-    now = time(nullptr);
-    Log.print(".");
-    delay(500);
-  }
+  configTzTime(TIMEZONE, NTP_SERVERS);
+  getLocalTime(&timeinfo);
 
   Log.println(" Done !");
-  Log.println("Save data...");
+  Log.print("Date Time: ");
+  Log.println(asctime(&timeinfo));
+
   Configuration.saveConfig();
 }
 
@@ -434,7 +432,7 @@ void setup()
   WiFi.softAPdisconnect();
 #endif
 
-  // Create ticker for update NTP time and save data
+  /* Update Time and save data */
   updateTimeAndSaveData();
 
   /* Initialize HTTP Server */
