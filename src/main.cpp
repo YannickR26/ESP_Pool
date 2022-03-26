@@ -12,6 +12,7 @@
 #include "RollerShutter.h"
 #include "SolenoidValve.h"
 #include "SimpleRelay.h"
+#include "ExtendedRelay.h"
 #include "Pwm.h"
 
 #define ENABLE_OTA    // If defined, enable Arduino OTA code.
@@ -26,7 +27,7 @@ SensorAM2301 am2301_ext(DHT_1_PIN), am2301_int(DHT_2_PIN);
 SolenoidValve valve(RELAY_1_PIN, RELAY_2_PIN);
 RollerShutter rollerShutter(RELAY_3_PIN, RELAY_4_PIN);
 SimpleRelay lamp(RELAY_5_PIN, "lamp");
-SimpleRelay pump(RELAY_6_PIN, "pump");
+ExtendedRelay pump(RELAY_6_PIN, "pump");
 Pwm lightExt(PWM_LAMP_EXT_PIN, 0, PWM_FREQUENCY);
 
 static Ticker tick_blinker, tick_flowMetter;
@@ -401,7 +402,9 @@ void setup()
   valve.setTimeout(Configuration._solenoidValveTimeout);
   valve.setMaxWaterQuantity(Configuration._solenoidValveMaxWaterQty);
   valve.setMaxWaterLevel(Configuration._solenoidValveMaxWaterLevel);
-  pump.setTimeout(Configuration._pumpTimeout);
+  pump.setModeAuto(Configuration._pumpModeAuto);
+  pump.setStartTime(Configuration._pumpStartHours, Configuration._pumpStartMinutes);
+  pump.setStopTime(Configuration._pumpStopHours, Configuration._pumpStopMinutes);
   lamp.setTimeout(Configuration._lampTimeout);
 
   // Initialize PWM
@@ -498,6 +501,7 @@ void loop()
   valve.handle();
   lightExt.handle();
   rollerShutter.handle();
+  pump.handle();
 
   if ((tick - tickSendData) >= (Configuration._timeSendData * 1000))
   {
