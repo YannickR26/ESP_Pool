@@ -16,8 +16,6 @@
 #include "ExtendedRelay.h"
 #include "Pwm.h"
 
-#define ENABLE_OTA    // If defined, enable Arduino OTA code.
-
 // OTA
 #ifdef ENABLE_OTA
 #include <ArduinoOTA.h>
