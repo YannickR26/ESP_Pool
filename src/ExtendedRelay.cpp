@@ -36,28 +36,21 @@ void ExtendedRelay::handle()
     if ((millis() - oldTick) < (20 * 1000))
         return;
 
-    struct tm timeInfo;
-    if (getLocalTime(&timeInfo))
+    // Relay OFF
+    if (getState() == RELAY_OFF)
     {
-        // Relay OFF
-        if (getState() == RELAY_OFF)
+        if (checkTime())
         {
-            // Start condition: startTime <= time < stopTime
-            if ((timeInfo.tm_hour >= _startHours) && (timeInfo.tm_min >= _startMinutes) &&
-                (timeInfo.tm_hour <= _stopHours) && (timeInfo.tm_min < _stopMinutes))
-            {
-                setState(RELAY_ON);
-            }
+            setState(RELAY_ON);
         }
+    }
 
-        // Relay ON
-        else
+    // Relay ON
+    else
+    {
+        if (!checkTime())
         {
-            // Stop condition: stopTime <= time
-            if ((timeInfo.tm_hour >= _stopHours) && (timeInfo.tm_min >= _stopMinutes))
-            {
-                setState(RELAY_OFF);
-            }
+            setState(RELAY_OFF);
         }
     }
 
@@ -97,3 +90,49 @@ const int ExtendedRelay::getState()
 /********************************************************/
 /******************** Private Method ********************/
 /********************************************************/
+
+// Return true if currentTime is bewteen startTime and stopTime
+bool ExtendedRelay::checkTime()
+{
+    struct tm timeInfo;
+    if (!getLocalTime(&timeInfo))
+        return false;
+
+    // Compute to time in minutes (0 -> 1439 min)
+    uint16_t currentTime = timeInfo.tm_hour*60;
+    currentTime += timeInfo.tm_min;
+
+    uint16_t startTime = _startHours*60;
+    startTime += _startMinutes;
+
+    uint16_t stopTime = _stopHours*60;
+    stopTime += _stopMinutes;
+
+    //                           _____________
+    // 00:00 _____________ Start               Stop _____________ 23:59
+    if (startTime < stopTime)
+    {
+        if ((startTime <= currentTime) && (currentTime < stopTime))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    //       _____                                          _____
+    // 00:00       Stop _____________________________ Start       23:59
+    else if (startTime > stopTime)
+    {
+        if ((stopTime <= currentTime) && (currentTime < startTime))
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+}

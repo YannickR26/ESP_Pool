@@ -22,6 +22,8 @@ public:
     const int getState();
 
 private:
+    bool checkTime();
+
     uint8_t _pinRelay;
     char _name[20];
     bool _modeAuto;
