@@ -1,7 +1,7 @@
 #pragma once
 
 // Version
-#define VERSION "V1.4.0"
+#define VERSION "V1.5.0"
 
 #define DEFAULT_HOSTNAME "ESP_Pool"
 #define DEFAULT_MQTTIPSERVER "192.168.1.201"
