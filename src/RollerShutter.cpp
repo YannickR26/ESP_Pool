@@ -4,6 +4,10 @@
 #include "Mqtt.h"
 #include "Logger.h"
 
+#include "JsonConfiguration.h"
+#include "ExtendedRelay.h"
+extern ExtendedRelay pump;
+
 /********************************************************/
 /******************** Public Method *********************/
 /********************************************************/
@@ -131,6 +135,9 @@ void RollerShutter::move()
     digitalWrite(_pinOpen, 1);
     _oldTick = millis();
     Log.println("Open rollerShutter...");
+    // Stop the pump during Open rollerShutter
+    pump.setModeAuto(false);
+    pump.setState(RELAY_OFF);
   }
   else if (_direction == -1)
   {
@@ -139,11 +146,16 @@ void RollerShutter::move()
     digitalWrite(_pinClose, 1);
     _oldTick = millis();
     Log.println("Close rollerShutter...");
+    // Stop the pump during Close rollerShutter
+    pump.setModeAuto(false);
+    pump.setState(RELAY_OFF);
   }
   else {
     digitalWrite(_pinClose, 0);
     digitalWrite(_pinOpen, 0);
     Log.println("Stop rollerShutter !");
+    // Restore modeAuto to pump
+    pump.setModeAuto(Configuration._pumpModeAuto);
   }
 
   publishState(true);
