@@ -1,7 +1,7 @@
 #pragma once
 
 // Version
-#define VERSION "V1.5.0"
+#define VERSION "V1.5.1"
 
 #define DEFAULT_HOSTNAME "ESP_Pool"
 #define DEFAULT_MQTTIPSERVER "192.168.1.201"
@@ -18,8 +18,8 @@
 // Flow Meter
 #define FLOW_1_PIN 14
 #define FLOW_2_PIN 12
-#define FLOW_COEF_A 1.f / (6.f * 4.5f)
-#define FLOW_COEF_B 8.f / 6.f
+#define FLOW_COEF_A (1.f / (6.f * 4.5f))
+#define FLOW_COEF_B (8.f / 6.f)
 
 // Temperature :
 // DS18B20
