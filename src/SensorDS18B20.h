@@ -39,7 +39,7 @@ public:
         if (temp == DEVICE_DISCONNECTED_C)
             return DEVICE_DISCONNECTED_C;
 
-        return temp;
+        return temp + 0.5f;
     }
 
 private:
