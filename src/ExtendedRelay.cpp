@@ -135,4 +135,6 @@ bool ExtendedRelay::checkTime()
             return true;
         }
     }
+
+    return false;
 }
