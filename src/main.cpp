@@ -74,8 +74,8 @@ void blinkLED()
 // Call every 1 second, so the counter is equal to frequency
 void computeFlowMetter()
 {
-  static uint32_t oldTime = 0;
-  uint32_t currentTime = millis();
+  static unsigned long oldTime = 0;
+  const unsigned long currentTime = millis();
   float ratio = 1000.0 / (currentTime - oldTime);
 
   // Detach the interrupt while calculating flow rate
@@ -445,10 +445,6 @@ void setup()
 #ifdef ENABLE_OTA
   Log.println("Arduino OTA activated");
 
-  // Port defaults to 8266
-  ArduinoOTA.setPort(8266);
-
-  // Hostname defaults to esp8266-[ChipID]
   ArduinoOTA.setHostname(Configuration._hostname.c_str());
 
   ArduinoOTA.onStart([]() {
