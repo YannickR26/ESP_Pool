@@ -195,7 +195,7 @@ void RollerShutter::publishState(bool forced)
         return;
     }
 
-    DynamicJsonDocument json(256);
+    JsonDocument json;
 
     json["position"]  = (int)_position;
     json["direction"] = _direction;

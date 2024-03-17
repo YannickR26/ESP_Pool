@@ -103,7 +103,7 @@ bool JsonConfiguration::readConfig()
 
 bool JsonConfiguration::saveConfig()
 {
-    DynamicJsonDocument doc(512);
+    JsonDocument doc;
 
     encodeToJson(doc);
 
@@ -186,7 +186,7 @@ void JsonConfiguration::encodeToJson(JsonDocument& _json)
 
 uint8_t JsonConfiguration::decodeJsonFromFile(const char* input)
 {
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     doc.clear();
 
     // Deserialize the JSON document
