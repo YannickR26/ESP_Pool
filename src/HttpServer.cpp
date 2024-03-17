@@ -1,7 +1,7 @@
 #include <FS.h>
 #include <SPIFFS.h>
 #include <ESPmDNS.h>
-#include <ESP_WiFiManager.h>
+#include <WiFiManager.h>
 
 // You can update by 'curl -F "image=@firmware.bin" ESP_Monitoring.local/update'
 
@@ -37,7 +37,7 @@ void HttpServer::setup(void)
     _webServer.sendHeader("Access-Control-Allow-Origin", "*");
     _webServer.send(200, "text/plain", "Reset WifiManager configuration, restart now in AP mode...");
     delay(200);
-    ESP_WiFiManager wifiManager;
+    WiFiManager wifiManager;
     wifiManager.resetSettings();
     delay(200);
     ESP.restart();

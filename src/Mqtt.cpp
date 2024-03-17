@@ -3,7 +3,7 @@
 #include "JsonConfiguration.h"
 #include <rom/rtc.h>
 #include <WiFi.h>
-#include <ESP_WiFiManager.h>
+#include <WiFiManager.h>
 #include "Logger.h"
 #include "RollerShutter.h"
 #include "SolenoidValve.h"
@@ -185,7 +185,7 @@ void Mqtt::callback(char *topic, uint8_t *payload, unsigned int length)
   else if (topicStr == String("reset"))
   {
     Log.println("Reset ESP and restart !!!");
-    ESP_WiFiManager wifiManager;
+    WiFiManager wifiManager;
     wifiManager.resetSettings();
     ESP.restart();
   }
