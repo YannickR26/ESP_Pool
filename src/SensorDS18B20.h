@@ -2,7 +2,7 @@
  *  SensorDS18B20.h
  *
  *  Created on: 10/04/2021
- * 
+ *
  *  Author : Yannick RICHARDOT (yannick.richardot@carbonbee.fr)
  */
 
@@ -14,7 +14,8 @@
 class SensorDS18B20
 {
 public:
-    SensorDS18B20(uint8_t pin) : _oneWire(pin), _sensor(&_oneWire)
+    explicit SensorDS18B20(uint8_t pin) :
+        _oneWire(pin), _sensor(&_oneWire)
     {
         _sensor.begin();
         _sensor.setResolution(12);
@@ -24,7 +25,7 @@ public:
 
     float readTemp()
     {
-        float temp;
+        float         temp;
         unsigned long timeout = millis() + 2000;
 
         do
@@ -37,12 +38,14 @@ public:
         } while ((temp == DEVICE_DISCONNECTED_C) && (millis() < timeout));
 
         if (temp == DEVICE_DISCONNECTED_C)
+        {
             return DEVICE_DISCONNECTED_C;
+        }
 
         return temp + 0.5f;
     }
 
 private:
-    OneWire _oneWire;
+    OneWire           _oneWire;
     DallasTemperature _sensor;
 };

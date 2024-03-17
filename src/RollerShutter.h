@@ -11,24 +11,25 @@ public:
 
     void handle();
 
-    void setDuration(const float timeInSeconds);
-    void setCurrentPosition(const float position);
+    void  setDuration(const float timeInSeconds);
+    void  setCurrentPosition(const float position);
     float getTarget();
-    void setPosition(const float positionInPercent);
-    void open();
-    void close();
-    void stop(bool forced = false);
+    void  setPosition(const float positionInPercent);
+    void  open();
+    void  close();
+    void  stop(bool forced = false);
 
 protected:
+
 private:
     void move();
     void publishState(bool forced = false);
 
-    uint8_t _pinOpen, _pinClose;
-    float _duration;    // in Seconds
-    float _position;    // in %
-    float _target;      // in %
-    int8_t _direction;
+    uint8_t       _pinOpen, _pinClose;
+    float         _duration; // in Seconds
+    float         _position; // in %
+    float         _target;   // in %
+    int8_t        _direction;
     unsigned long _oldTick;
-    Ticker _tickerStop;
+    Ticker        _tickerStop;
 };

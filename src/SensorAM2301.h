@@ -2,7 +2,7 @@
  *  SensorAM2301.h
  *
  *  Created on: 09/05/2021
- * 
+ *
  *  Author : Yannick RICHARDOT (yannick.richardot@carbonbee.fr)
  */
 
@@ -13,7 +13,7 @@
 class SensorAM2301
 {
 public:
-    SensorAM2301(uint8_t pin)
+    explicit SensorAM2301(uint8_t pin)
     {
         _sensor.setup(pin, DHTesp::DHT22);
     }
@@ -30,7 +30,7 @@ public:
         return _sensor.getHumidity();
     }
 
-    const char *getStatus()
+    const char* getStatus()
     {
         return _sensor.getStatusString();
     }

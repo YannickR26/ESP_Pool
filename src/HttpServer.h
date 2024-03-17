@@ -9,26 +9,26 @@
 class HttpServer
 {
 public:
-  HttpServer();
-  virtual ~HttpServer();
+    HttpServer();
+    virtual ~HttpServer();
 
-  void setup(void);
-  void handle(void);
+    void setup(void);
+    void handle(void);
 
-  String getContentType(String filename);
-  bool handleFileRead(String path);
+    String getContentType(String filename);
+    bool   handleFileRead(String path);
 
-  WebServer &webServer();
+    WebServer& webServer();
 
-  void sendJson(const uint16_t code, JsonDocument &doc);
+    void sendJson(const uint16_t code, JsonDocument& doc);
 
 protected:
-  static void get_config();
-  static void set_config();
+    static void get_config();
+    static void set_config();
 
 private:
-  WebServer _webServer;
-  ESP32HTTPUpdateServer _httpUpdater;
+    WebServer             _webServer;
+    ESP32HTTPUpdateServer _httpUpdater;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES)

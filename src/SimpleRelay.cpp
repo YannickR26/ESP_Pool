@@ -33,9 +33,14 @@ void SimpleRelay::setState(uint8_t state)
 
     _tickTimeout.detach();
 
-    if (state) {
+    if (state)
+    {
         if (_timeout != 0)
-            _tickTimeout.once(_timeout, +[](SimpleRelay *inst) { inst->setState(0); }, this);
+        {
+            _tickTimeout.once(
+                _timeout, +[](SimpleRelay* inst) { inst->setState(0); }, this
+            );
+        }
     }
 }
 

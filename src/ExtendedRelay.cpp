@@ -11,7 +11,7 @@ ExtendedRelay::ExtendedRelay(uint8_t pinRelay, const char* name)
     strncpy(_name, name, sizeof(_name));
     pinMode(_pinRelay, OUTPUT);
     digitalWrite(_pinRelay, 0);
-    _modeAuto = false;
+    _modeAuto   = false;
     _startHours = _startMinutes = 0;
     _stopHours = _stopMinutes = 0;
 }
@@ -26,15 +26,21 @@ void ExtendedRelay::handle()
 
     // If mode auto is disable, we quit now
     if (_modeAuto == false)
+    {
         return;
+    }
 
     // If no start and no stop time, we quit now
     if ((_startHours == 0) && (_startMinutes == 0) && (_stopHours == 0) && (_stopMinutes == 0))
+    {
         return;
+    }
 
     // Check state every 20 seconds
     if ((millis() - oldTick) < (20 * 1000))
+    {
         return;
+    }
 
     // Relay OFF
     if (getState() == RELAY_OFF)
@@ -64,13 +70,13 @@ void ExtendedRelay::setModeAuto(const bool enable)
 
 void ExtendedRelay::setStartTime(const uint8_t hours, const uint8_t minutes)
 {
-    _startHours = hours;
+    _startHours   = hours;
     _startMinutes = minutes;
 }
 
 void ExtendedRelay::setStopTime(const uint8_t hours, const uint8_t minutes)
 {
-    _stopHours = hours;
+    _stopHours   = hours;
     _stopMinutes = minutes;
 }
 
@@ -96,16 +102,18 @@ bool ExtendedRelay::checkTime()
 {
     struct tm timeInfo;
     if (!getLocalTime(&timeInfo))
+    {
         return false;
+    }
 
     // Compute to time in minutes (0 -> 1439 min)
-    uint16_t currentTime = timeInfo.tm_hour*60;
+    uint16_t currentTime = timeInfo.tm_hour * 60;
     currentTime += timeInfo.tm_min;
 
-    uint16_t startTime = _startHours*60;
+    uint16_t startTime = _startHours * 60;
     startTime += _startMinutes;
 
-    uint16_t stopTime = _stopHours*60;
+    uint16_t stopTime = _stopHours * 60;
     stopTime += _stopMinutes;
 
     //                           _____________

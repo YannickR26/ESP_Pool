@@ -14,11 +14,11 @@ SolenoidValve::SolenoidValve(uint8_t pinPositivePower, uint8_t pinNegativePower)
     pinMode(_pinNegativePower, OUTPUT);
     digitalWrite(_pinPositivePower, 0);
     digitalWrite(_pinNegativePower, 0);
-    _isOpen = false;
-    _timeout = 0;
-    _waterQuantity = 0;
+    _isOpen           = false;
+    _timeout          = 0;
+    _waterQuantity    = 0;
     _waterQuantityMax = 0;
-    _waterLevelMax = 0;
+    _waterLevelMax    = 0;
 }
 
 SolenoidValve::~SolenoidValve()
@@ -73,11 +73,15 @@ void SolenoidValve::open()
     MqttClient.publish(String("solenoidValve"), String("open"));
 
     _tickTimeout.detach();
-    _isOpen = true;
+    _isOpen        = true;
     _waterQuantity = Configuration._waterQtyA;
 
     if (_timeout != 0)
-        _tickTimeout.once(_timeout, +[](SolenoidValve *inst) { inst->close(); }, this);
+    {
+        _tickTimeout.once(
+            _timeout, +[](SolenoidValve* inst) { inst->close(); }, this
+        );
+    }
 }
 
 void SolenoidValve::close()

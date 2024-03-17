@@ -6,29 +6,33 @@
 class Logger
 {
 public:
-	Logger(){};
-	virtual ~Logger(){};
+    Logger() :
+        addTimeToString(true)
+    {
+    }
 
-	void setup();
-	void setupTelnet();
-	void handle();
+    virtual ~Logger(){};
 
-	void println(const String &s = String());
-	void println(const char str[]) { println(String(str)); }
+    void setup();
+    void setupTelnet();
+    void handle();
 
-	void print(const String &s);
-	void print(const char str[]) { print(String(str)); }
+    void println(const String& s = String());
+    void println(const char str[]) { println(String(str)); }
 
-	char *getDateTimeString();
-	
+    void print(const String& s);
+    void print(const char str[]) { print(String(str)); }
+
+    char* getDateTimeString();
+
 private:
-	void send(String &s);
-	void addTime(String &s);
+    void send(String& s);
+    void addTime(String& s);
 #ifdef DEBUG_BY_TELNET
-	void handleTelnetClient();
+    void handleTelnetClient();
 #endif
 
-	bool addTimeToString;
+    bool addTimeToString;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES)
