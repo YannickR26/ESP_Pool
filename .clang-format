@@ -1,0 +1,76 @@
+Language: Cpp
+Standard: Cpp11
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 0
+AccessModifierOffset: -4
+
+NamespaceIndentation: All
+
+AlignAfterOpenBracket: BlockIndent
+AlignArrayOfStructures: Right
+AlignEscapedNewlines: Right
+AlignOperands: Align
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveBitFields: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveMacros: Consecutive
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 2
+
+AllowAllArgumentsOnNextLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortBlocksOnASingleLine: Empty
+AllowShortLoopsOnASingleLine: true
+AllowAllParametersOfDeclarationOnNextLine: false
+
+EmptyLineAfterAccessModifier: Never
+EmptyLineBeforeAccessModifier: Always
+
+PointerAlignment: Left
+
+ReferenceAlignment: Left
+QualifierAlignment: Left
+
+IndentCaseLabels: true
+
+BinPackParameters: false
+BinPackArguments: false
+
+ExperimentalAutoDetectBinPacking: false
+
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeRangeBasedForLoopColon: true
+
+SortIncludes: Never
+
+IndentPPDirectives: None
+
+InsertBraces: true
+InsertNewlineAtEOF: true
+
+BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterColon
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: true
+  AfterClass: true
+  AfterUnion: true
+  AfterControlStatement: true
+  AfterNamespace: true
+  AfterCaseLabel: true
+  AfterFunction: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+  BeforeWhile: false
+  BeforeLambdaBody: false
